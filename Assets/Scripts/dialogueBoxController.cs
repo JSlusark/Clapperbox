@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class DialogueBoxController : MonoBehaviour
 {
-    [SerializeField] private characterBox characterBox;
+    [SerializeField] private DialogueData dialogueData;
 
     // [SerializeField] private string[] dialogue;
     [SerializeField] private dialogueView dialogueView;
@@ -12,14 +12,14 @@ public class DialogueBoxController : MonoBehaviour
 
     private void Awake()
     {
-        dialogueView.DisplayDialogue(characterBox.Dialogue[_current]);
+        dialogueView.DisplayDialogue(dialogueData.Dialogue[_current], dialogueData.Sound);
     }
 
     public void DisplayNext()
     {
-        string[] dialogue = characterBox.Dialogue;
+        string[] dialogue = dialogueData.Dialogue;
         
         if (_current < dialogue.Length - 1)
-            dialogueView.DisplayDialogue(dialogue[++_current]);
+            dialogueView.DisplayDialogue(dialogue[++_current], dialogueData.Sound);
     }
 }
