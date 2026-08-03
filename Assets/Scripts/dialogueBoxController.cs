@@ -1,20 +1,25 @@
+using DefaultNamespace;
 using UnityEngine;
 
-    public class DialogueBoxController : MonoBehaviour
+public class DialogueBoxController : MonoBehaviour
+{
+    [SerializeField] private characterBox characterBox;
+
+    // [SerializeField] private string[] dialogue;
+    [SerializeField] private dialogueView dialogueView;
+
+    private int _current = 0;
+
+    private void Awake()
     {
-        [SerializeField] private string[] dialogues;
-        [SerializeField] private dialogueView dialogueView;
-        
-        private int _current = 0;
-
-        private void Awake()
-        {
-            dialogueView.DisplayDialogue(dialogues[_current]);    
-        }
-
-        public void DisplayNext()
-        {
-            dialogueView.DisplayDialogue(_current < dialogues.Length - 1 ? dialogues[++_current] : "end of array");
-        }
-        
+        dialogueView.DisplayDialogue(characterBox.Dialogue[_current]);
     }
+
+    public void DisplayNext()
+    {
+        string[] dialogue = characterBox.Dialogue;
+        
+        if (_current < dialogue.Length - 1)
+            dialogueView.DisplayDialogue(dialogue[++_current]);
+    }
+}

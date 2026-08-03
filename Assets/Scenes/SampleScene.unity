@@ -560,11 +560,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34c2719de26d42faae2fc37dfd6c7057, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueBoxController
-  dialogues:
-  - This is the first dialogue right?
-  - This is the second dialogue
-  - and this is the 3rd
-  textView: {fileID: 188560195}
+  characterBox: {fileID: 11400000, guid: 028235a53816e48b4aff27dcc7ec7e00, type: 2}
+  dialogueView: {fileID: 188560195}
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
