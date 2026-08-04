@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e051d1580834336be6596cfa8439b0c, type: 3}
+  m_Name: Speaker_Reyna
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.SpeakerData
+  speakerName: Reyna
+  speakerColor: {r: 0.060468294, g: 0.7169812, b: 0, a: 1}
+  sound: {fileID: 8300000, guid: 673c126267987488a84a83abb0b24ae4, type: 3}
+  expressions:
+  - type: 0
+    sprite: {fileID: 8911418861917894761, guid: 9984dfb56fa0c4366a345600c06ca3e4, type: 3}
+  - type: 1
+    sprite: {fileID: -2033874897865044293, guid: 324febc7337454201ab060ee76112ada, type: 3}
+  - type: 2
+    sprite: {fileID: -3442921208648205952, guid: a490f461a7e4e4710a33e8bb9a2e79dc, type: 3}
+  - type: 3
+    sprite: {fileID: -5533987957982516091, guid: bc8b32da6fdc242bcb43e761d2974bb1, type: 3}
+  - type: 4
+    sprite: {fileID: -669143880158456656, guid: 8a72676ed4b9e4283bcd75829c5c5de3, type: 3}

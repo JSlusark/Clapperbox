@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
+  m_Name: Dialogue_Reyna
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.DialogueData
+  dialogue:
+  - text: Hey my name is Reyna, nice to meet you!
+    expression: 0
+  - text: "What you alredy met me?!! \nReally?!!"
+    expression: 4
+  - text: Oh.. I'm sorry I couldn't remeber you.. Really..
+    expression: 2
+  - text: 'Uhmm! Wait! That must mean I amy be pretty popular?
+
+      Eh Eh Eh!'
+    expression: 1
+  - text: "Eh..! I wasn't that famouse elf that teleported their team in a sea of
+      cow shit!! \nWho is sharing this gossip?!"
+    expression: 3

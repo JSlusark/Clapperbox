@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 766b1cf157ba4e72a53890954e57f407, type: 3}
+  m_Name: Chatterbox_Reyna
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.characterDialogue
+  speakerData: {fileID: 11400000, guid: 559eff671121f4d9c9c957d26be43671, type: 2}
+  dialogueList: {fileID: 11400000, guid: 4bdfcf1eaa4b14b7f99b6e745285e336, type: 2}
