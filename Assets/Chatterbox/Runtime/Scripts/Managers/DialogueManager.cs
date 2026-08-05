@@ -19,14 +19,14 @@ public class DialogueManager : MonoBehaviour
 
     public void NextLine()
     {
-        if (_line >= data.dialogueList.dialogue.Count - 1) return;
+        if (_line >= data.dialogueList.dialogueList.Count - 1) return;
         ShowLine(++_line);
     }
     
     private void ShowLine(int line)
     {
         
-        var dialogue = data.dialogueList.dialogue[line];
+        var dialogue = data.dialogueList.dialogueList[line];
         var speaker = data.speakerData;
         
         nameView.Show(speaker.speakerName, speaker.speakerColor);

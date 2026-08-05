@@ -100,3 +100,6 @@ Assets/Sortify.meta
 *.wktree
 *.workspace
 ignore.conf
+
+# Temp .meta grayout
+*.meta

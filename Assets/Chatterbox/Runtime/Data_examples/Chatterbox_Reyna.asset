@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Chatterbox_Reyna
   m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.characterDialogue
   speakerData: {fileID: 11400000, guid: 559eff671121f4d9c9c957d26be43671, type: 2}
-  dialogueList: {fileID: 11400000, guid: 4bdfcf1eaa4b14b7f99b6e745285e336, type: 2}
+  dialogueList: {fileID: 11400000, guid: 6a0e41542799247aea1ec9077f2a4190, type: 2}
