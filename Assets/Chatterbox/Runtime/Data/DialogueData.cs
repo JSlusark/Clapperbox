@@ -10,21 +10,21 @@ using UnityEditor;
 namespace DefaultNamespace
 {
     [System.Serializable]
-    public class Dialogue
+    public class Line 
     {
         [TextArea(3, 6)] public string text;
-        public Expression expression = Expression.Neutral;
+        public DialogueEmotion dialogueEmotion = DialogueEmotion.Neutral;
     }
 
-    [CreateAssetMenu(fileName = "Dialogue", menuName = "Chatterbox/Dialogue", order = 0)]
+    [CreateAssetMenu(fileName = "Line", menuName = "Chatterbox/Line", order = 0)]
     public class DialogueData : ScriptableObject
     {
-        [Header("Dialogue details:")] public List<Dialogue> dialogueList = new List<Dialogue>();
-
+        [Header("Line details:")] public List<Line> dialogueList = new List<Line>();
+        
         [Header("Import From Csv:")] [Tooltip("Drag your .csv file here, then click the button below.")]
         public TextAsset csvImport;
 
-
+        // UI features for csv
         public void ClearDialogueList()
         {
             if (csvImport == null) return;
@@ -56,17 +56,17 @@ namespace DefaultNamespace
                     string dialogueField = fields[0].Trim(' ');
                     string expressionField = fields[1].Trim(' ');
 
-                    Dialogue listEntry = new Dialogue();
+                    Line listEntry = new Line();
                     listEntry.text = dialogueField;
-                    if (Enum.TryParse(expressionField, true, out Expression type))
-                        listEntry.expression = type;
+                    if (Enum.TryParse(expressionField, true, out DialogueEmotion type))
+                        listEntry.dialogueEmotion = type;
                     else
                     {
-                        Debug.LogWarning($"Expression type unrecognised: '{expressionField}' on line {i + 1} could not convert to enum. Defaulting to Neutral.");
-                        listEntry.expression = Expression.Neutral;
+                        Debug.LogWarning($"DialogueEmotion type unrecognised: '{expressionField}' on line {i + 1} could not convert to enum. Defaulting to Neutral.");
+                        listEntry.dialogueEmotion = DialogueEmotion.Neutral;
                     }
 
-                    Debug.Log($"{i + 1}.IMPORTED: \n  Dialogue: {dialogueField} \n  Expression: {expressionField}");
+                    Debug.Log($"{i + 1}.IMPORTED: \n  Line: {dialogueField} \n  DialogueEmotion: {expressionField}");
                     dialogueList.Add(listEntry);
                 }
             }
@@ -80,7 +80,7 @@ namespace DefaultNamespace
         }
     }
 
-    // Adds features to the DialogueData scriptable object - to move in editor folder
+    // Adds features to the DialogueData scriptable object - TODO: move in editor folder
     #if UNITY_EDITOR
     [CustomEditor(typeof(DialogueData))]
     public class DialogueDataEditor : Editor

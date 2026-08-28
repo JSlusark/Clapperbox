@@ -1,25 +1,28 @@
+using System;
+using Chatterbox.Runtime.Scripts.Generics;
 using UnityEngine;
 
-public class AudioManager : MonoBehaviour
+public class AudioManager : Singleton<AudioManager>
 {
-    public static AudioManager Instance{ get; private set; }
     [SerializeField] private AudioSource _audioSource;
-
-    private void Awake()
+    
+    private void OnEnable()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
+        ChatterBehaviour.OnChatterTrigger += PlaySound; 
     }
 
+    private void OnDisable()
+    {
+ 
+        ChatterBehaviour.OnChatterTrigger -= PlaySound;
+    }
 
     public void PlaySound(AudioClip clip)
     {
         if (clip != null && _audioSource != null)
             _audioSource.PlayOneShot(clip);
     }
+
+
+
 }

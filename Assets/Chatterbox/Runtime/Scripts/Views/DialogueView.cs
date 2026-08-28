@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -5,32 +6,34 @@ using UnityEngine;
 public class DialogueView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI displayedText;
-    [SerializeField] private float _textSpeed;
-    [SerializeField] private float _soundFrequency;
-   
-    private Coroutine _typeWriteCoroutine;
-    
-    public void Show(string text, AudioClip sound)
+    private string _line;
+    private int _pointer;
+
+    private void OnEnable()
     {
-        if (_typeWriteCoroutine != null) StopCoroutine(_typeWriteCoroutine);
-        _typeWriteCoroutine = StartCoroutine(TypeWriteRoutine(text, sound));
+        ChatterBehaviour.OnChatterTrigger += DisplayText; // ChatterBehaviour.Instance not needed as static
     }
 
-
-    private IEnumerator TypeWriteRoutine(string text, AudioClip sound)
+    private void OnDisable()
     {
-        if (displayedText == null) yield break;
-
-        displayedText.text = text;
-        displayedText.maxVisibleCharacters = 0;
-
-        for (int i = 0; i < text.Length; i++)
-        {
-            displayedText.maxVisibleCharacters++;
-            if (i % _soundFrequency == 0 && sound != null) 
-                AudioManager.Instance.PlaySound(sound);
-            
-            yield return new WaitForSeconds(_textSpeed);
-        }
+        ChatterBehaviour.OnChatterTrigger -= DisplayText;
     }
+ 
+    public void SetLine(string fullText)
+    {
+        if (displayedText != null) displayedText.text = "";  // safety check in case text component has placeholder text or line was not completed before new load
+        // Debug.Log("[DialogueView] Line set: " + fullText);
+        _pointer = 0;
+        _line = fullText;
+    }
+
+    private void DisplayText(AudioClip soundClip)
+    {
+        if (displayedText == null || _line == null || _pointer >= _line.Length) return;  // safety check to ensure no remaining characters pending
+        
+        // Debug.Log($"[DialogueView] Displaying text from ChatterTrigger: {displayedText.text}");
+        displayedText.text = displayedText.text + _line[_pointer++];
+      
+    }
+
 }

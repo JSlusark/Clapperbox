@@ -1,4 +1,4 @@
-public enum Expression
+public enum DialogueEmotion
 {
     Neutral,
     Happy,
@@ -6,3 +6,4 @@ public enum Expression
     Angry,
     Surprised,
 }
+
