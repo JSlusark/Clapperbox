@@ -23,9 +23,17 @@ using UnityEngine;
                     newChatterBehaviour = new MonotoneSpeech(); // todo: send params to constructor 
                     break;
                 
-                // case ChatterType.Duotone:
-                //     newChatterBehaviour = new DuotoneSpeech();
-                //     break;
+                case ChatterType.Duotone:
+                    newChatterBehaviour = new DuotoneSpeech();
+                    break;
+                
+                case ChatterType.FullWord:
+                    newChatterBehaviour = new FullWordSpeech();
+                    break;
+                
+                case ChatterType.Intro:
+                    newChatterBehaviour = new IntroSpeech();
+                    break;
                 
                 // More add other types once I make sure of the structure to achieve
 

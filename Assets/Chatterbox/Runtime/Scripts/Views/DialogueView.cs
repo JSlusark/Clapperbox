@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -11,12 +9,13 @@ public class DialogueView : MonoBehaviour
 
     private void OnEnable()
     {
-        ChatterBehaviour.OnChatterTrigger += DisplayText; // ChatterBehaviour.Instance not needed as static
+        // Anonymous delegate - made via lambdas and uses (_, _) to ignore the 2 params
+        ChatterBehaviour.OnChatterTrigger += (_, _) => DisplayText();
     }
 
     private void OnDisable()
     {
-        ChatterBehaviour.OnChatterTrigger -= DisplayText;
+        ChatterBehaviour.OnChatterTrigger -= (_, _) => DisplayText();
     }
  
     public void SetLine(string fullText)
@@ -27,7 +26,7 @@ public class DialogueView : MonoBehaviour
         _line = fullText;
     }
 
-    private void DisplayText(AudioClip soundClip)
+    private void DisplayText()
     {
         if (displayedText == null || _line == null || _pointer >= _line.Length) return;  // safety check to ensure no remaining characters pending
         

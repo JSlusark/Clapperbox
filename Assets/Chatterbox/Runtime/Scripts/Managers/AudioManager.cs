@@ -17,10 +17,13 @@ public class AudioManager : Singleton<AudioManager>
         ChatterBehaviour.OnChatterTrigger -= PlaySound;
     }
 
-    public void PlaySound(AudioClip clip)
+    public void PlaySound(AudioClip clip, float pitch)
     {
         if (clip != null && _audioSource != null)
+        {
+            _audioSource.pitch = pitch;
             _audioSource.PlayOneShot(clip);
+        }
     }
 
 
