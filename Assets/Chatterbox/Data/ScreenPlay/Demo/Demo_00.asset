@@ -10,17 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
-  m_Name: Dialogue_csv
+  m_Name: Demo_00
   m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.DialogueData
-  dialogueList:
-  - text: '"Hey, how are you doing?"'
-    expression: 0
-  - text: I'm not very good
-    expression: 2
-  - text: I know right?
-    expression: 4
-  - text: You know, had some peaceful time.."
-    expression: 0
-  - text: What?!! You think I'm a slacker?!!
-    expression: 3
-  csvImport: {fileID: 4900000, guid: ad0ce69977f054577a422b9c1a0e817f, type: 3}
+  dialogueList: []
+  csvImport: {fileID: 0}

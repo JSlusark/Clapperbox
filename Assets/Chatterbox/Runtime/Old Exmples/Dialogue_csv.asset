@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
+  m_Name: Dialogue_csv
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.DialogueData
+  dialogueList:
+  - text: '"Hey, how are you doing?"'
+    dialogueEmotion: 0
+  - text: I dont kmow.. I'm not very good
+    dialogueEmotion: 2
+  - text: Oh you don't know..??
+    dialogueEmotion: 4
+  - text: I had an incredible time on vacation that now coming back feels WEIRDDD!
+    dialogueEmotion: 1
+  - text: What?!! You think I Like to slack too much?!
+    dialogueEmotion: 3
+  csvImport: {fileID: 4900000, guid: ad0ce69977f054577a422b9c1a0e817f, type: 3}

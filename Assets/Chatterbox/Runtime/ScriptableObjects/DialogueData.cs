@@ -13,10 +13,10 @@ namespace DefaultNamespace
     public class Line 
     {
         [TextArea(3, 6)] public string text;
-        public DialogueEmotion dialogueEmotion = DialogueEmotion.Neutral;
+        public Expression expression = Expression.Neutral;
     }
 
-    [CreateAssetMenu(fileName = "Line", menuName = "Chatterbox/Line", order = 0)]
+    [CreateAssetMenu(fileName = "Line", menuName = "OLD/Line", order = 0)]
     public class DialogueData : ScriptableObject
     {
         [Header("Line details:")] public List<Line> dialogueList = new List<Line>();
@@ -58,15 +58,15 @@ namespace DefaultNamespace
 
                     Line listEntry = new Line();
                     listEntry.text = dialogueField;
-                    if (Enum.TryParse(expressionField, true, out DialogueEmotion type))
-                        listEntry.dialogueEmotion = type;
+                    if (Enum.TryParse(expressionField, true, out Expression type))
+                        listEntry.expression = type;
                     else
                     {
-                        Debug.LogWarning($"DialogueEmotion type unrecognised: '{expressionField}' on line {i + 1} could not convert to enum. Defaulting to Neutral.");
-                        listEntry.dialogueEmotion = DialogueEmotion.Neutral;
+                        Debug.LogWarning($"Expression type unrecognised: '{expressionField}' on line {i + 1} could not convert to enum. Defaulting to Neutral.");
+                        listEntry.expression = Expression.Neutral;
                     }
 
-                    Debug.Log($"{i + 1}.IMPORTED: \n  Line: {dialogueField} \n  DialogueEmotion: {expressionField}");
+                    Debug.Log($"{i + 1}.IMPORTED: \n  Line: {dialogueField} \n  Expression: {expressionField}");
                     dialogueList.Add(listEntry);
                 }
             }

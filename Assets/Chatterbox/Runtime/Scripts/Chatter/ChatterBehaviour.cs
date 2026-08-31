@@ -1,5 +1,6 @@
 using System.Collections;
 using System;
+using DefaultNamespace;
 using UnityEngine;
 
 
@@ -16,7 +17,7 @@ public abstract class ChatterBehaviour
     }
 
     // Virtual defines standard execution and pitch to avoid repeating logic
-    public virtual void Execute(string text, SpeakerData data)
+    public virtual void Execute(string text, CharacterData data)
     {
         if (text == null) return;
         DialogueManager.RunCoroutine(StyleEmitRoutine(text.Length));
@@ -57,8 +58,8 @@ public class MonotoneSpeech : ChatterBehaviour
         // s = 1;
     }
 
-    // public override void Execute(string text, SpeakerData data)
-    // {
+    // public override void Execute(string text, Character data)
+  // {
     //     // Debug.Log($"[Duotone] Executing");
     //     if (text == null) return;
     //     DialogueManager.RunCoroutine(StyleEmitRoutine(text.Length));
@@ -76,7 +77,7 @@ public class DuotoneSpeech : ChatterBehaviour
         // SoundFrequency = 0.05f;
     }
 
-    // public override void Execute(string text, SpeakerData data)
+    // public override void Execute(string text, Character data)
     // {
     //     // Debug.Log($"[Duotone] Executing");
     //     if (text == null) return;
@@ -118,7 +119,7 @@ public class FullWordSpeech : ChatterBehaviour
 
     }
 
-    public override void Execute(string text, SpeakerData data)
+    public override void Execute(string text, CharacterData data)
     {
         Debug.Log($"[Duotone] Executing");
         if (text == null) return;
@@ -136,7 +137,7 @@ public class IntroSpeech : ChatterBehaviour
     
 
 
-    public override void Execute(string text, SpeakerData data)
+    public override void Execute(string text, CharacterData data)
     {
         
         Debug.Log($"[Duotone] Executing");

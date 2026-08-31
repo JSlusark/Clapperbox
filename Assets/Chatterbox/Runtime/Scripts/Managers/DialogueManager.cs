@@ -31,10 +31,10 @@ public class DialogueManager : Singleton<DialogueManager>
     private void PerformLine(int line)
     {
         var dialogue = data.dialogueList.dialogueList[line];
-        var speaker = data.speakerData;
+        var speaker = data.characterData;
         dialogueView.SetLine(dialogue.text);
         
-        avatarView.Show(speaker.GetExpression(dialogue.dialogueEmotion)); // more a reaction view here
+        avatarView.Show(speaker.GetExpression(dialogue.expression)); // more a reaction view here
         
         // might change this depending if I want to have the narration manager
         nameView.Show(speaker.speakerName, speaker.speakerColor);
