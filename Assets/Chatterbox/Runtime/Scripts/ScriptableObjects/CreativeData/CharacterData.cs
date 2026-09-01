@@ -17,7 +17,7 @@ namespace DefaultNamespace
      * The SO takes the name of the folder in which teh SO is created.
      * Example:
      * - You are in "Assets/Chatterbox/Folder_test/Characters/Rial"
-     * - Right click > Create/ChatterBox/Character Data
+     * - Right click > Create/ChatterBoxData/Character ChatterBoxData
      * - Creates SO with title "Rial_data"
      */
     public class CharacterData : ScriptableObject

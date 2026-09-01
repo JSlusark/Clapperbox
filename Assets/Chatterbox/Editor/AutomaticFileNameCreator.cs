@@ -8,7 +8,7 @@ namespace Chatterbox.Editor
 {
     public class AutomaticFileNameCreator
     {
-        [MenuItem("Assets/Create/ChatterBox/Character Data", priority = 0)] // Adds the custom option
+        [MenuItem("Assets/Create/ChatterBox/CreativeData/Character Data", priority = 0)] // Adds the custom option
 
         public static void CreateDynamicCharacterSettings()
         {
