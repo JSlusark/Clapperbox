@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76671199700204b999a9f53c0e47dbd7, type: 3}
+  m_Name: Tuto_data
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.CharacterData
+  speakerName: Tuto
+  speakerColor: {r: 0.9245283, g: 0, b: 0, a: 1}
+  expressions:
+  - type: 4
+    sprite: {fileID: 621222158458474870, guid: f39085ec0c9a1481c9434a7fc8fe6d0f, type: 3}
+  - type: 0
+    sprite: {fileID: -4289608744078014302, guid: 224d9885fa0ea4b1d80821b11cd98454, type: 3}
+  - type: 2
+    sprite: {fileID: 7985626363670038235, guid: 5e46c55406f0c413e88539b1111b7827, type: 3}
+  - type: 1
+    sprite: {fileID: 6059799596907309901, guid: 5afa70543604f4fcf95e19c85465d4e5, type: 3}
+  - type: 3
+    sprite: {fileID: -3752711834126370623, guid: 954154f5c26a44135aa539c7cf7e79ed, type: 3}
+  - type: 5
+    sprite: {fileID: 5767058898976193538, guid: f6f9bb25e42b04175bb8129fa2a05093, type: 3}
+  chatterSound: {fileID: 8300000, guid: 673c126267987488a84a83abb0b24ae4, type: 3}
+  chatterType: 0

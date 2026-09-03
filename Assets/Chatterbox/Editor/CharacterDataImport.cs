@@ -11,8 +11,8 @@ namespace Chatterbox.Editor
     [CustomEditor(typeof(CharacterData))]
     public class CharacterDataImport : Editor
     {
-        private CharacterData inspectedObject;
-        private string folder;
+        private CharacterData _inspectedObject;
+        private string _folder;
 
         // CONSTANTS
         private const string AudioFolder = "Voice";
@@ -22,34 +22,37 @@ namespace Chatterbox.Editor
         {
             DrawDefaultInspector();
 
-            inspectedObject = (CharacterData)target;
+            _inspectedObject = (CharacterData)target;
             GUILayout.Space(15);
+
 
             // folder = GetFolderLocation();
 
             if (GUILayout.Button("Import Voice From Folder", GUILayout.Height(30)))
                 ImportAudio();
+
             if (GUILayout.Button("Import Expressions From Folder", GUILayout.Height(30)))
                 ImportExpressions();
         }
 
         private string GetFolderLocation()
         {
-            string assetLocation = AssetDatabase.GetAssetPath(inspectedObject);
+            string assetLocation = AssetDatabase.GetAssetPath(_inspectedObject);
             return Path.GetDirectoryName(assetLocation);
         }
 
         private void SaveImport()
         {
-            EditorUtility.SetDirty(inspectedObject);
+            EditorUtility.SetDirty(_inspectedObject);
             AssetDatabase.SaveAssets();
+
         }
 
         private void ImportAudio()
         {
-            folder = GetFolderLocation();
-            
-            string audioPath = Path.Combine(folder, AudioFolder);
+            _folder = GetFolderLocation();
+
+            string audioPath = Path.Combine(_folder, AudioFolder);
 
             if (!Directory.Exists(audioPath))
             {
@@ -72,13 +75,13 @@ namespace Chatterbox.Editor
                     clip = AssetDatabase.LoadAssetAtPath<AudioClip>(cleanPath);
                     if (clip != null)
                     {
-                        inspectedObject.chatterSound = clip;
+                        _inspectedObject.chatterSound = clip;
                         break;
                     }
                 }
             }
 
-            if (!inspectedObject.chatterSound)
+            if (!_inspectedObject.chatterSound)
             {
                 Debug.LogError($"[Voice] Could not import Voice file: folder might be empty, contain invalid name or file type");
                 return;
@@ -90,20 +93,20 @@ namespace Chatterbox.Editor
 
         private void ImportExpressions()
         {
-            folder = GetFolderLocation();
-            
-            string spritesDirectory = Path.Combine(folder, SpritesFolder);
+            _folder = GetFolderLocation();
+
+            string spritesDirectory = Path.Combine(_folder, SpritesFolder);
             if (!Directory.Exists(spritesDirectory))
             {
                 Debug.LogError($"[Expressions] Missing target sprite folder directory at: {spritesDirectory}");
                 return;
             }
 
-            if(inspectedObject.expressions.Count > 0)
-                inspectedObject.expressions.Clear();
-            
+            if (_inspectedObject.expressions.Count > 0)
+                _inspectedObject.expressions.Clear();
+
             string[] spriteFiles = Directory.GetFiles(spritesDirectory);
- 
+
             List<string> unrecognisedFiles = new List<string>();
             foreach (string filePath in spriteFiles)
             {
@@ -114,8 +117,10 @@ namespace Chatterbox.Editor
                 Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(cleanPath);
                 if (sprite != null)
                 {
-                    ExpressionSprite newExpression = new ExpressionSprite();
-                    newExpression.sprite = sprite;
+                    ExpressionSprite newExpression = new()
+                    {
+                        sprite = sprite
+                    };
 
                     // Parses file name to assign to enum
                     string fileName = Path.GetFileNameWithoutExtension(cleanPath);
@@ -127,27 +132,27 @@ namespace Chatterbox.Editor
                         unrecognisedFiles.Add(fileName);
                     }
 
-                    inspectedObject.expressions.Add(newExpression);
+                    _inspectedObject.expressions.Add(newExpression);
                 }
             }
-            
+
             if (unrecognisedFiles.Count > 0)
             {
                 string enumFilePath = "Assets/Chatterbox/Runtime/Scripts/Enums/Expression.cs";
-                
+
                 Debug.LogWarning($"[Expressions] Added expressions as unrecognised: {string.Join(", ", unrecognisedFiles)}");
                 Debug.Log($"Add the new expression <a href=\"{enumFilePath}\" line=\"1\">[here]</a> or check for correct file name and import again");
             }
-            
-            if (inspectedObject.expressions.Count == 0)
+
+            if (_inspectedObject.expressions.Count == 0)
             {
                 Debug.LogError($"[Expressions] Could not import expressions file: folder might be empty, contain invalid names or file types");
                 return;
             }
-            
+
             SaveImport();
             Debug.Log("Expressions Import Successful");
-            
+
         }
     }
 }

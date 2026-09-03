@@ -13,6 +13,7 @@ namespace Chatterbox.Editor
         public static void CreateDynamicCharacterSettings()
         {
             string pointedPath = GetPath();
+            // heuo
             if (pointedPath == null) return;
             string folderName = Path.GetFileName(pointedPath);
             string targetFilename = $"{folderName}_data.asset";
@@ -25,7 +26,7 @@ namespace Chatterbox.Editor
                 return;
             }
 
-            // Creates and register the file into Unity's database
+            // Creates and and register the file into Unity's database
             CharacterData newAsset = ScriptableObject.CreateInstance<CharacterData>();
             newAsset.speakerName = folderName;
             AssetDatabase.CreateAsset(newAsset, fullAssetPath);
