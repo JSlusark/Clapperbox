@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Linq;
+
 using Chatterbox.Runtime.Scripts.Generics;
 using DefaultNamespace;
 using UnityEngine;
@@ -18,33 +20,40 @@ public class DialogueManager : Singleton<DialogueManager>
     
     private void Start()
     {
-        PerformLine(_line);
+        PerformLine(_line++);
     }
 
     public void NextLine() 
     {
         // todo: if called, ensure to stop any hanging audio
-        if (_line >= chatterBoxData.screenPlay.dialogueList.Count - 1) return;
-        PerformLine(++_line);
+        if (_line > chatterBoxData.screenPlay.dialogueList.Count - 1) return;
+        PerformLine(_line++);
     }
     
-    private void PerformLine(int line)
+    private void PerformLine(int i)
     {
-        var dialogue = chatterBoxData.screenPlay.dialogueList[line];
-        var speaker = chatterBoxData.characters[line];
-        dialogueView.SetLine(dialogue.text);
-        
-        avatarView.Show(speaker.GetExpression(dialogue.expression)); // more a reaction view here
-        
-        // might change this depending if I want to have the narration manager
-        nameView.Show(speaker.speakerName, speaker.speakerColor);
-        bgView.Show(speaker.speakerColor);
+        var line = chatterBoxData.screenPlay.dialogueList[i];
+        var speakerData =  chatterBoxData.characters.FirstOrDefault(character => character.speakerName == line.speaker);
+
+       LoadView(line, speakerData);
 
         // Sets the chatter (the way the text, audio and creatives are animated )
-        ChatterBehaviour = ChatterFactory.CreateBehaviour(speaker.chatterType, speaker.chatterSound);
+        ChatterBehaviour = ChatterFactory.CreateBehaviour(speakerData.chatterType, speakerData.chatterSound);
 
         if (ChatterBehaviour != null)
-            ChatterBehaviour.Execute(dialogue.text, speaker);
+            ChatterBehaviour.Execute(line.text, speakerData);
+    }
+
+    private void LoadView(Line line, CharacterData speaker)
+    {
+        Debug.Log($"Speaker: {speaker.name}, {speaker.GetExpression(line.expression)} ");
+
+        dialogueView.SetLine(line.text); // 
+        avatarView.Show(speaker.GetExpression(line.expression)); // more a reaction view here
+        nameView.Show(speaker.speakerName, speaker.speakerColor);
+        bgView.Show(speaker.speakerColor);
+        // lineview.Show
+        
     }
     
     public static Coroutine RunCoroutine(IEnumerator routine)

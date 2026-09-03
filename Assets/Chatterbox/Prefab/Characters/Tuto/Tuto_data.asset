@@ -27,5 +27,5 @@ MonoBehaviour:
     sprite: {fileID: -3752711834126370623, guid: 954154f5c26a44135aa539c7cf7e79ed, type: 3}
   - type: 5
     sprite: {fileID: 5767058898976193538, guid: f6f9bb25e42b04175bb8129fa2a05093, type: 3}
-  chatterSound: {fileID: 8300000, guid: 673c126267987488a84a83abb0b24ae4, type: 3}
+  chatterSound: {fileID: 8300000, guid: d2d2437297a274f858b506f55c951e85, type: 3}
   chatterType: 0

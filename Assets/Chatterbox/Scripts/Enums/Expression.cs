@@ -7,5 +7,6 @@ public enum Expression
     Angry,
     Surprised,
     Sassy,
+    Cheeky,
 }
 

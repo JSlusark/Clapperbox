@@ -28,8 +28,8 @@ MonoBehaviour:
   - speaker: Rial
     text: "\"Yeah, you know how desperate programmers are these days.. \u2018specially
       noobs like this one, am I right?\""
-    expression: 0
-    invalidExpression: Cheeky
+    expression: 7
+    invalidExpression: None
   - speaker: Tuto
     text: "RIAL\u2026!!!"
     expression: 5
@@ -50,6 +50,6 @@ MonoBehaviour:
     invalidExpression: None
   - speaker: Rial
     text: "The boss\u2019s the boss! You know how \u2019t is!"
-    expression: 0
-    invalidExpression: Cheecky
+    expression: 7
+    invalidExpression: None
   csvImport: {fileID: 4900000, guid: c7d7d0417598149de8babbc3c0df49d9, type: 3}

@@ -17,7 +17,7 @@ MonoBehaviour:
   expressions:
   - type: 4
     sprite: {fileID: 621222158458474870, guid: fae70b8c59f604fcdbdbe76733ca4fdf, type: 3}
-  - type: 0
+  - type: 7
     sprite: {fileID: -4289608744078014302, guid: 69b9ba554535847d1aa3cb0aebd7f3fe, type: 3}
   - type: 2
     sprite: {fileID: 7985626363670038235, guid: 8ebfdafddfc25435092d6cad60fe3e7c, type: 3}
