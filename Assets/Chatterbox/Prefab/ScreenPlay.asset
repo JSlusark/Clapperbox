@@ -52,4 +52,7 @@ MonoBehaviour:
     text: "The boss\u2019s the boss! You know how \u2019t is!"
     expression: 7
     invalidExpression: None
+  characters:
+  - {fileID: 11400000, guid: 266d135fb07254e7aa3940dafe38ad43, type: 2}
+  - {fileID: 11400000, guid: efec03eafe3bf4d3984c729d6057a97d, type: 2}
   csvImport: {fileID: 4900000, guid: c7d7d0417598149de8babbc3c0df49d9, type: 3}

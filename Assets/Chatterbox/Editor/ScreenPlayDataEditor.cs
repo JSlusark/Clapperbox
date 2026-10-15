@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -10,13 +11,14 @@ using UnityEditor;
 
 namespace DefaultNamespace
 {
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
     [CustomEditor(typeof(ScreenPlayData))]
     [CanEditMultipleObjects]
     public class ScreenPlayDataEditor : Editor
     {
         private SerializedProperty _dialogueProp;
         private SerializedProperty _csvImportProp;
+        private SerializedProperty _charactersProp;
 
         private Color defaultColor;
         private Color errorColor;
@@ -26,6 +28,7 @@ namespace DefaultNamespace
         {
             _dialogueProp = serializedObject.FindProperty("dialogueList");
             _csvImportProp = serializedObject.FindProperty("csvImport");
+            _charactersProp = serializedObject.FindProperty("characters");
             defaultColor = GUI.backgroundColor;
             errorColor = new Color(1f, 0f, 0f);
         }
@@ -35,6 +38,7 @@ namespace DefaultNamespace
             serializedObject.Update();
 
             DrawCsvImport();
+            DrawCharacters();
             DrawCustomList();
             serializedObject.ApplyModifiedProperties();
         }
@@ -62,6 +66,18 @@ namespace DefaultNamespace
 
                 EditorGUILayout.EndHorizontal();
             }
+        }
+
+        private void DrawCharacters()
+        {
+            if (_charactersProp == null) return;
+            using (new EditorGUI.DisabledScope(true) /* disables character list and is deactivated/disposed at end of using block*/)
+                EditorGUILayout.PropertyField(_charactersProp, true); // draws the characters list
+            /* 
+            - "EditorGUI.BeginDisabledGroup(true)" is what can make an inspector field read-only, but it does not have a disposable scope and disables everything after itself. So DisabledScope is used as an alternative.
+            - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/statements/using
+            - IDisposable is an interface, a contract that says "this type (EditorGUI.DisabledScope) has a Dispose method". Dispose is where a type releases resources the garbage collector can't clean up on its own (file handles, network connections, unmanaged memory, etc.); it must be called explicitly, or automatically at the end of a using block. In DisabledScope's case it releases nothing: it just calls EndDisabledGroup().
+                */
         }
 
         private void DrawCustomList()
@@ -95,7 +111,7 @@ namespace DefaultNamespace
 
 
                 bool isUnrecognised = false;
-                if (expressionProp                != null && expressionProp.enumValueIndex >= 0 &&
+                if (expressionProp != null && expressionProp.enumValueIndex >= 0 &&
                     expressionProp.enumValueIndex < expressionProp.enumNames.Length)
                 {
                     if (expressionProp.enumNames[expressionProp.enumValueIndex] == "Unrecognised")
@@ -152,9 +168,9 @@ namespace DefaultNamespace
                          null) // nullable value types, i change all values or some with func(valuetochange:value)
         {
             if (labelWidth != null) EditorGUIUtility.labelWidth = labelWidth.Value;
-            if (textColor  != null) GUI.color = textColor.Value;
-            if (bgColor    != null) GUI.backgroundColor = bgColor.Value;
+            if (textColor != null) GUI.color = textColor.Value;
+            if (bgColor != null) GUI.backgroundColor = bgColor.Value;
         }
     }
-    #endif
+#endif
 }

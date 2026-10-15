@@ -1,13 +1,11 @@
 using System.Collections;
-using System.Linq;
-
 using Chatterbox.Runtime.Scripts.Generics;
 using DefaultNamespace;
 using UnityEngine;
 
 public class DialogueManager : Singleton<DialogueManager>
 {
-    [SerializeField] private ChatterBoxData chatterBoxData;
+    [SerializeField] private ScreenPlayData screenPlay;
 
     [SerializeField] private NameView nameView;
     [SerializeField] private DialogueView dialogueView;
@@ -26,14 +24,19 @@ public class DialogueManager : Singleton<DialogueManager>
     public void NextLine() 
     {
         // todo: if called, ensure to stop any hanging audio
-        if (_line > chatterBoxData.screenPlay.dialogueList.Count - 1) return;
+        if (_line > screenPlay.dialogueList.Count - 1) return;
         PerformLine(_line++);
     }
     
     private void PerformLine(int i)
     {
-        var line = chatterBoxData.screenPlay.dialogueList[i];
-        var speakerData =  chatterBoxData.characters.FirstOrDefault(character => character.speakerName == line.speaker);
+        var line = screenPlay.dialogueList[i];
+        var speakerData = screenPlay.GetCharacter(line.speaker);
+        if (speakerData == null)
+        {
+            Debug.LogError($"[Chatterbox] No character '{line.speaker}' in {screenPlay.name}. Re-import the csv or check the speakerName.");
+            return;
+        }
 
        LoadView(line, speakerData);
 

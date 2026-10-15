@@ -138,7 +138,7 @@ namespace Chatterbox.Editor
 
             if (unrecognisedFiles.Count > 0)
             {
-                string enumFilePath = "Assets/Chatterbox/Runtime/Scripts/Enums/Expression.cs";
+                string enumFilePath = "Assets/Chatterbox/Scripts/Enums/Expression.cs";
 
                 Debug.LogWarning($"[Expressions] Added expressions as unrecognised: {string.Join(", ", unrecognisedFiles)}");
                 Debug.Log($"Add the new expression <a href=\"{enumFilePath}\" line=\"1\">[here]</a> or check for correct file name and import again");

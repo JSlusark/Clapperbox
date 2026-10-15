@@ -22,10 +22,18 @@ namespace DefaultNamespace
     [CreateAssetMenu(fileName = "ScreenPlay", menuName = "ChatterBox/CreativeData/Screen Play", order = 0)]
     public class ScreenPlayData : ScriptableObject
     {
-        [Header("Line details:")] 
+        // [Header("Line details:")]
         public List<Line> dialogueList = new List<Line>();
 
-        [Header("Import From Csv:")] [Tooltip("Drag your .csv file here, then click the button below.")]
+        // [Header("Characters:")] [Tooltip("Resolved automatically from the speakers in the csv on import.")]
+        public List<CharacterData> characters = new List<CharacterData>();
+
+        public CharacterData GetCharacter(string speakerName)
+        {
+            return characters.Find(character => character != null && character.speakerName == speakerName);
+        }
+
+        // [Header("Import From Csv:")] [Tooltip("Drag your .csv file here, then click the button below.")]
         public TextAsset csvImport;
     }
 }
