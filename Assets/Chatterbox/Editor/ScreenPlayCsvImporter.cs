@@ -17,26 +17,53 @@ namespace DefaultNamespace
         {
             if (csvAsset == null) return false;
 
-            string path = AssetDatabase.GetAssetPath(csvAsset); // "Assets/Chatterbox/Prefab/ScreenPlays/Test.csv"
-            if (!path.EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase))
-            {
-                Debug.LogWarning("[Csv Import] Could not import data: csv file must have a .csv extension");
-                return false;
-            }
-            return true;
+            // need to check from file path since the editor doesn't know the file extension from the TextAsset itself
+            string path = AssetDatabase.GetAssetPath(csvAsset);
+            return path.EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Wipes the screenplay and flags the error so the inspector can show it.
+        private static void Fail(ScreenPlayData targetData, string error)
+        {
+            Debug.LogWarning($"[Csv Import] Could not import data: {error}");
+            targetData.importState = ImportState.Error;
+            EditorUtility.SetDirty(targetData);
+            AssetDatabase.SaveAssets();
+        }
+
+        public static void Clear(ScreenPlayData targetData)
+        {
+            if (targetData == null) return;
+
+            Undo.RecordObject(targetData, "Clear Screenplay");
+            targetData.dialogueList.Clear();
+            targetData.characters.Clear();
+            targetData.csvImport = null; // when we get error the file sets to null if this is active, are we calling clear also in error?
+            targetData.importState = ImportState.Empty;
+            EditorUtility.SetDirty(targetData);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Csv Import]Successfully cleared screenPlay list!");
         }
 
 
 
         public static void Import(ScreenPlayData targetData, TextAsset csvAsset)
         {
-
-            if (!IsCsvFile(csvAsset))
-                return;
-
             if (targetData == null)
             {
-                Debug.LogWarning("[Csv Import] Could not import data: no csv found in the Csv Import field");
+                Debug.LogWarning("[Csv Import] Could not import data: no ScreenPlayData target");
+                return;
+            }
+
+            if (csvAsset == null)
+            {
+                Fail(targetData, "No file was added in the Csv Import box");
+                return;
+            }
+
+            if (!IsCsvFile(csvAsset))
+            {
+                Fail(targetData, $"'{csvAsset.name}' is not a .csv file");
                 return;
             }
 
@@ -74,25 +101,21 @@ namespace DefaultNamespace
                     Debug.Log($"{i + 1}.IMPORTED: \n Name: {nameField} \n Line: {dialogueField} \n  Expression: {expressionField}");
                     targetData.dialogueList.Add(listEntry);
                 }
+                else
+                {
+                    Fail(targetData, $"line {i + 1} has {fields.Length} columns, expected 3");
+                    return;
+                }
             }
 
             CharacterObjectsImport.ImportCharacters(targetData);
+            targetData.importState = ImportState.Success;
 
             EditorUtility.SetDirty(targetData);
             AssetDatabase.SaveAssets();
             Debug.Log($"Successfully imported {targetData.dialogueList.Count} lines into {targetData.name}.");
         }
 
-        public static void Clear(ScreenPlayData targetData)
-        {
-            if (targetData == null) return;
 
-            Undo.RecordObject(targetData, "Clear Screenplay");
-            targetData.dialogueList.Clear();
-            targetData.characters.Clear();
-            EditorUtility.SetDirty(targetData);
-            AssetDatabase.SaveAssets();
-            Debug.Log("[Csv Import]Successfully cleared screenPlay list!");
-        }
     }
 }

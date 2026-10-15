@@ -19,6 +19,13 @@ namespace DefaultNamespace
         [TextArea(1, 1)] public string invalidExpression;
     }
 
+    public enum ImportState
+    {
+        Empty,  // nothing imported yet, cleared, or a new csv was dropped in: hide everything below the import box
+        Error,  // last import failed: red import box and an error message instead of the lists
+        Success // last import succeeded: show characters and dialogue
+    }
+
     [CreateAssetMenu(fileName = "ScreenPlay", menuName = "ChatterBox/CreativeData/Screen Play", order = 0)]
     public class ScreenPlayData : ScriptableObject
     {
@@ -35,5 +42,7 @@ namespace DefaultNamespace
 
         // [Header("Import From Csv:")] [Tooltip("Drag your .csv file here, then click the button below.")]
         public TextAsset csvImport;
+
+        [HideInInspector] public ImportState importState;
     }
 }

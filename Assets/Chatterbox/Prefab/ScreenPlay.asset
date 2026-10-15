@@ -12,47 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
   m_Name: ScreenPlay
   m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.ScreenPlayData
-  dialogueList:
-  - speaker: Tuto
-    text: Howdie game developer!
-    expression: 2
-    invalidExpression: None
-  - speaker: Tuto
-    text: '"Before we start this tutorial, let me tell you.."'
-    expression: 1
-    invalidExpression: None
-  - speaker: Tuto
-    text: The creator is so excited you wanted to check this asset out!
-    expression: 2
-    invalidExpression: None
-  - speaker: Rial
-    text: "\"Yeah, you know how desperate programmers are these days.. \u2018specially
-      noobs like this one, am I right?\""
-    expression: 7
-    invalidExpression: None
-  - speaker: Tuto
-    text: "RIAL\u2026!!!"
-    expression: 5
-    invalidExpression: None
-  - speaker: Tuto
-    text: "Don\u2019t joke like this!! The demonstrator our creator\u2019s portfolio
-      piece for her job applications!"
-    expression: 4
-    invalidExpression: None
-  - speaker: Tuto
-    text: Please ignore him.. he was added to make this demonstration more.. ahem..
-      lively!
-    expression: 1
-    invalidExpression: None
-  - speaker: Tuto
-    text: "Even if I didn\u2019t really agree much.."
-    expression: 3
-    invalidExpression: None
-  - speaker: Rial
-    text: "The boss\u2019s the boss! You know how \u2019t is!"
-    expression: 7
-    invalidExpression: None
-  characters:
-  - {fileID: 11400000, guid: 266d135fb07254e7aa3940dafe38ad43, type: 2}
-  - {fileID: 11400000, guid: efec03eafe3bf4d3984c729d6057a97d, type: 2}
-  csvImport: {fileID: 4900000, guid: c7d7d0417598149de8babbc3c0df49d9, type: 3}
+  dialogueList: []
+  characters: []
+  csvImport: {fileID: 0}
+  importState: 0
