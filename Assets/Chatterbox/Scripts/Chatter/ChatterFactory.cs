@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Chatterbox.Runtime.Scripts.Chatter;
 using UnityEngine;
 
@@ -13,27 +12,21 @@ using UnityEngine;
 // {
 public class ChatterFactory
 {
-    public static ChatterBehaviour CreateBehaviour(ChatterType type, AudioClip sound)
+    public static ChatterStyle CreateStyle(ChatterType type)
     {
-        ChatterBehaviour newChatterBehaviour = null;
-
         switch (type)
         {
             case ChatterType.Monotone:
-                newChatterBehaviour = new MonotoneSpeech(); // todo: send params to constructor 
-                break;
+                return new MonotoneStyle(); // todo: send params to constructor 
 
             case ChatterType.Duotone:
-                newChatterBehaviour = new DuotoneSpeech();
-                break;
+                return new DuotoneStyle();
 
             case ChatterType.FullWord:
-                newChatterBehaviour = new FullWordSpeech();
-                break;
+                return new FullWordStyle();
 
             case ChatterType.Intro:
-                newChatterBehaviour = new IntroSpeech();
-                break;
+                return new IntroStyle();
 
             // More add other types once I make sure of the structure to achieve
 
@@ -41,10 +34,5 @@ public class ChatterFactory
                 Debug.LogError($"[ChatterFactory] Unhandled ChatterType: {type}");
                 return null;
         }
-
-        // 2. Concrete Configuration: The factory sets up the instance parameters
-        newChatterBehaviour.SetSound(sound);
-
-        return newChatterBehaviour;
     }
 }

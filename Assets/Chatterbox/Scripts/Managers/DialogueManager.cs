@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using Chatterbox.Runtime.Scripts.Generics;
 using DefaultNamespace;
 using UnityEngine;
@@ -12,23 +14,34 @@ public class DialogueManager : Singleton<DialogueManager>
     [SerializeField] private AvatarView avatarView;
     [SerializeField] private AvatarBgView bgView;
 
-    public ChatterBehaviour ChatterBehaviour;
+    private Coroutine _lineRoutine;
+
+    public static event Action<ChatterLine, AudioClip> OnPerformance;
+    public static event Action OnLineSkipped;
 
     private int _line = 0;
     
     private void Start()
     {
-        PerformLine(_line++);
+        StartLine(_line++);
     }
 
     public void NextLine() 
     {
-        // todo: if called, ensure to stop any hanging audio
         if (_line > screenPlay.dialogueList.Count - 1) return;
-        PerformLine(_line++);
+
+        InterruptPreviousLine();
+        StartLine(_line++);
+    }
+
+    private void InterruptPreviousLine() // Stops audio to not interfere on next line
+    {
+        if (_lineRoutine != null) StopCoroutine(_lineRoutine);
+        _lineRoutine = null;
+        OnLineSkipped?.Invoke();
     }
     
-    private void PerformLine(int i)
+    private void StartLine(int i)
     {
         var line = screenPlay.dialogueList[i];
         var speakerData = screenPlay.GetCharacter(line.speaker);
@@ -41,10 +54,21 @@ public class DialogueManager : Singleton<DialogueManager>
        LoadView(line, speakerData);
 
         // Sets the chatter (the way the text, audio and creatives are animated )
-        ChatterBehaviour = ChatterFactory.CreateBehaviour(speakerData.chatterType, speakerData.chatterSound);
+        var chatterStyle = ChatterFactory.CreateStyle(speakerData.chatterType);
+        if (chatterStyle == null) return;
 
-        if (ChatterBehaviour != null)
-            ChatterBehaviour.Execute(line.text, speakerData);
+        _lineRoutine = StartCoroutine(PerformLine(chatterStyle.GetLine(line.text), speakerData.chatterSound));
+    }
+
+    private IEnumerator PerformLine(IEnumerable<ChatterLine> line, AudioClip sound)
+    {
+        foreach (var unit in line)
+        {
+            OnPerformance?.Invoke(unit, sound);
+            yield return new WaitForSeconds(unit.Tempo);
+        }
+
+        _lineRoutine = null;
     }
 
     private void LoadView(Line line, CharacterData speaker)
@@ -55,12 +79,6 @@ public class DialogueManager : Singleton<DialogueManager>
         avatarView.Show(speaker.GetExpression(line.expression)); // more a reaction view here
         nameView.Show(speaker.speakerName, speaker.speakerColor);
         bgView.Show(speaker.speakerColor);
-        // lineview.Show
-        
-    }
-    
-    public static Coroutine RunCoroutine(IEnumerator routine)
-    {
-        return Instance.StartCoroutine(routine);
+
     }
 }

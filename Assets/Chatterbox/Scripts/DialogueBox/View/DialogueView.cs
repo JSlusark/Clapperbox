@@ -4,18 +4,17 @@ using UnityEngine;
 public class DialogueView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI displayedText;
-    private string _line;
+    private string _text;
     private int _pointer;
 
     private void OnEnable()
     {
-        // Anonymous delegate - made via lambdas and uses (_, _) to ignore the 2 params
-        ChatterBehaviour.OnChatterTrigger += (_, _) => DisplayText();
+        DialogueManager.OnPerformance += DisplayText;
     }
 
     private void OnDisable()
     {
-        ChatterBehaviour.OnChatterTrigger -= (_, _) => DisplayText();
+        DialogueManager.OnPerformance -= DisplayText;
     }
  
     public void SetLine(string fullText)
@@ -23,16 +22,17 @@ public class DialogueView : MonoBehaviour
         if (displayedText != null) displayedText.text = "";  // safety check in case text component has placeholder text or line was not completed before new load
         // Debug.Log("[DialogueView] Line set: " + fullText);
         _pointer = 0;
-        _line = fullText;
+        _text = fullText;
     }
 
-    private void DisplayText()
+    // Named method (not a lambda) so OnDisable can actually unsubscribe it
+    private void DisplayText(ChatterLine line, AudioClip _)
     {
-        if (displayedText == null || _line == null || _pointer >= _line.Length) return;  // safety check to ensure no remaining characters pending
-        
-        // Debug.Log($"[DialogueView] Displaying text from ChatterTrigger: {displayedText.text}");
-        displayedText.text = displayedText.text + _line[_pointer++];
-      
+        if (displayedText == null || _text == null || _pointer >= _text.Length) return;  // safety check to ensure no remaining characters pending
+
+        int count = Mathf.Min(line.Chunk, _text.Length - _pointer);
+        displayedText.text += _text.Substring(_pointer, count);
+        _pointer += count;
     }
 
 }

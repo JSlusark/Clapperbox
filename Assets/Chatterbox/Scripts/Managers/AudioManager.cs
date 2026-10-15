@@ -1,4 +1,3 @@
-using System;
 using Chatterbox.Runtime.Scripts.Generics;
 using UnityEngine;
 
@@ -8,23 +7,32 @@ public class AudioManager : Singleton<AudioManager>
     
     private void OnEnable()
     {
-        ChatterBehaviour.OnChatterTrigger += PlaySound; 
+        DialogueManager.OnPerformance += PlayVoice; 
+        DialogueManager.OnLineSkipped += StopVoice;
     }
 
     private void OnDisable()
     {
  
-        ChatterBehaviour.OnChatterTrigger -= PlaySound;
+        DialogueManager.OnPerformance -= PlayVoice;
+        DialogueManager.OnLineSkipped -= StopVoice;
     }
 
-    public void PlaySound(AudioClip clip, float pitch)
+    private void PlayVoice(ChatterLine line, AudioClip clip)
     {
         if (clip != null && _audioSource != null)
         {
-            _audioSource.pitch = pitch;
+            _audioSource.pitch = line.Pitch;
             _audioSource.PlayOneShot(clip);
         }
     }
+
+    // Stop() also cuts clips started with PlayOneShot on this source
+    private void StopVoice()
+    {
+        if (_audioSource != null) _audioSource.Stop();
+    }
+
 
 
 
