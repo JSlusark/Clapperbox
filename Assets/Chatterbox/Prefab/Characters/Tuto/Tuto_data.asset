@@ -28,4 +28,4 @@ MonoBehaviour:
   - type: 5
     sprite: {fileID: 5767058898976193538, guid: f6f9bb25e42b04175bb8129fa2a05093, type: 3}
   chatterSound: {fileID: 8300000, guid: d2d2437297a274f858b506f55c951e85, type: 3}
-  chatterType: 0
+  chatterType: 4
