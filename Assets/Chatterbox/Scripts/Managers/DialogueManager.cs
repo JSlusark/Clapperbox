@@ -57,7 +57,7 @@ public class DialogueManager : Singleton<DialogueManager>
         var chatterStyle = ChatterFactory.CreateStyle(speakerData.chatterType);
         if (chatterStyle == null) return;
 
-        _lineRoutine = StartCoroutine(PerformLine(chatterStyle.GetLine(line.text), speakerData.chatterSound));
+        _lineRoutine = StartCoroutine(PerformLine(chatterStyle.GetLine(line.text, speakerData.chatterSound), speakerData.chatterSound));
     }
 
     private IEnumerator PerformLine(IEnumerable<ChatterLine> line, AudioClip sound)

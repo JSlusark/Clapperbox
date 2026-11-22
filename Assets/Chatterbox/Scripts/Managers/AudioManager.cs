@@ -20,14 +20,17 @@ public class AudioManager : Singleton<AudioManager>
 
     private void PlayVoice(ChatterLine line, AudioClip clip)
     {
-        if (clip != null && _audioSource != null)
-        {
-            _audioSource.pitch = line.Pitch;
-            _audioSource.PlayOneShot(clip);
-        }
+        if (clip == null || _audioSource == null || line.SoundLength <= 0f) return;
+
+        // Play (not PlayOneShot) so the blip can be cut at the style's sound limit
+        double now = AudioSettings.dspTime;
+        _audioSource.clip = clip;
+        _audioSource.pitch = line.Pitch;
+        _audioSource.PlayScheduled(now);
+        _audioSource.SetScheduledEndTime(now + line.SoundLength);
     }
 
-    // Stop() also cuts clips started with PlayOneShot on this source
+    // Cuts the current blip when a line is skipped
     private void StopVoice()
     {
         if (_audioSource != null) _audioSource.Stop();

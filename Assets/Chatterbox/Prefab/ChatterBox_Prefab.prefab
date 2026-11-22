@@ -485,7 +485,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1922842235272379236}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34c2719de26d42faae2fc37dfd6c7057, type: 3}
+  m_Script: {fileID: 11500000, guid: 839541cad02504032a10c67938ff1aa4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueBoxController
   screenPlay: {fileID: 11400000, guid: d7349b3b988ff4bb8a35815d3f53a568, type: 2}
