@@ -1,5 +1,8 @@
 #if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using DefaultNamespace;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -9,7 +12,7 @@ namespace Chatterbox.Editor
 {
     /*
      * Tools > ChatterBox > Create ChatterBox
-     * Pick a csv and it creates, in Assets/Chatterbox/ChatterBoxes/ChatterBox_n/:
+     * Pick one or more csv files; each one creates, in Assets/Chatterbox/ChatterBoxes/ChatterBox_n/:
      *  - a copy of the csv
      *  - Screenplay_n.asset, already imported from the csv
      *  - ChatterBox_n.prefab, a variant of ChatterBox_Prefab with the screenplay assigned
@@ -19,53 +22,161 @@ namespace Chatterbox.Editor
         private const string BasePrefabPath = "Assets/Chatterbox/Prefab/ChatterBox_Prefab.prefab";
         private const string OutputRoot = "Assets/Chatterbox/ChatterBoxes";
 
-        private string _csvPath;
-        private string _error;
+        private readonly List<string> _csvPaths = new List<string>(); // full paths, one ChatterBox each
+        private readonly List<string> _failures = new List<string>(); // "file: reason" from the last run
+        private Vector2 _scroll;
 
         [MenuItem("Tools/ChatterBox/Create ChatterBox")]
         public static void Open()
         {
             var window = GetWindow<CreateChatterBoxWindow>(true, "Create ChatterBox");
-            window.minSize = new Vector2(380, 160);
+            window.minSize = new Vector2(400, 260);
         }
 
         private void OnGUI()
         {
             EditorGUILayout.LabelField("Upload CSV", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("First row is a header, then one line per row: speaker, expression, text", MessageType.Info);
+            EditorGUILayout.HelpBox("Each csv becomes its own ChatterBox.\nFirst row is a header, then one line per row: speaker, expression, text", MessageType.Info);
 
             EditorGUILayout.BeginHorizontal();
-            string fileLabel = string.IsNullOrEmpty(_csvPath) ? "No file selected" : Path.GetFileName(_csvPath);
-            EditorGUILayout.LabelField(fileLabel, EditorStyles.textField); // read-only display of the picked file
-            if (GUILayout.Button("Browse...", GUILayout.Width(80))) Browse();
+            if (GUILayout.Button("Add CSV...")) AddFile();
+            if (GUILayout.Button("Add Folder...")) AddFolder();
+            using (new EditorGUI.DisabledScope(_csvPaths.Count == 0))
+                if (GUILayout.Button("Clear", GUILayout.Width(60))) _csvPaths.Clear();
             EditorGUILayout.EndHorizontal();
 
-            if (!string.IsNullOrEmpty(_error)) EditorGUILayout.HelpBox(_error, MessageType.Error);
+            DrawFileList();
+            DrawFailures();
 
-            GUILayout.FlexibleSpace();
-            using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_csvPath)))
+            string label = _csvPaths.Count == 1 ? "Create 1 ChatterBox" : $"Create {_csvPaths.Count} ChatterBoxes";
+            using (new EditorGUI.DisabledScope(_csvPaths.Count == 0))
+                if (GUILayout.Button(label, GUILayout.Height(28))) CreateAll();
+        }
+
+        // The list doubles as a drop area for csv files from Finder or the Project window
+        private void DrawFileList()
+        {
+            Rect dropArea = EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(true));
+            _scroll = EditorGUILayout.BeginScrollView(_scroll);
+
+            if (_csvPaths.Count == 0)
+                EditorGUILayout.LabelField("Drop csv files here", EditorStyles.centeredGreyMiniLabel);
+
+            for (int i = 0; i < _csvPaths.Count; i++)
             {
-                if (GUILayout.Button("Create ChatterBox", GUILayout.Height(28)))
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField(new GUIContent(Path.GetFileName(_csvPaths[i]), _csvPaths[i])); // tooltip shows the full path
+                if (GUILayout.Button("✕", GUILayout.Width(22)))
                 {
-                    GameObject prefab = CreateFromCsv(_csvPath, out _error);
-                    if (prefab != null)
+                    _csvPaths.RemoveAt(i);
+                    GUIUtility.ExitGUI(); // list changed mid-draw, stop this repaint
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+
+            HandleDrop(dropArea);
+        }
+
+        private void HandleDrop(Rect dropArea)
+        {
+            Event evt = Event.current;
+            if (evt.type != EventType.DragUpdated && evt.type != EventType.DragPerform) return;
+            if (!dropArea.Contains(evt.mousePosition)) return;
+
+            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+            if (evt.type == EventType.DragPerform)
+            {
+                DragAndDrop.AcceptDrag();
+                foreach (string path in DragAndDrop.paths) // Finder gives full paths, the Project window "Assets/..." paths
+                {
+                    if (Directory.Exists(path)) AddCsvsInFolder(path);
+                    else AddPath(path);
+                }
+            }
+            evt.Use();
+        }
+
+        private void DrawFailures()
+        {
+            if (_failures.Count == 0) return;
+            EditorGUILayout.HelpBox("Not created:\n" + string.Join("\n", _failures), MessageType.Error);
+        }
+
+        private void AddFile()
+        {
+            string path = EditorUtility.OpenFilePanel("Select screenplay CSV", "", "csv");
+            if (!string.IsNullOrEmpty(path)) AddPath(path); // empty = cancelled
+        }
+
+        private void AddFolder()
+        {
+            string folder = EditorUtility.OpenFolderPanel("Select a folder of screenplay CSVs", "", "");
+            if (!string.IsNullOrEmpty(folder)) AddCsvsInFolder(folder);
+        }
+
+        private void AddCsvsInFolder(string folder)
+        {
+            foreach (string path in Directory.GetFiles(folder, "*.csv").OrderBy(p => p))
+                AddPath(path);
+        }
+
+        private void AddPath(string path)
+        {
+            if (!path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)) return;
+
+            string fullPath = Path.GetFullPath(path);
+            if (!_csvPaths.Contains(fullPath)) _csvPaths.Add(fullPath);
+            _failures.Clear(); // the list changed, old results no longer apply
+        }
+
+        private void CreateAll()
+        {
+            _failures.Clear();
+            var created = new List<UnityEngine.Object>();
+            var failedPaths = new List<string>();
+
+            try
+            {
+                for (int i = 0; i < _csvPaths.Count; i++)
+                {
+                    string fileName = Path.GetFileName(_csvPaths[i]);
+                    EditorUtility.DisplayProgressBar("Creating ChatterBoxes", fileName, (float)i / _csvPaths.Count);
+
+                    GameObject prefab = CreateFromCsv(_csvPaths[i], out string error);
+                    if (prefab != null) created.Add(prefab);
+                    else
                     {
-                        EditorUtility.FocusProjectWindow();
-                        Selection.activeObject = prefab;
-                        EditorGUIUtility.PingObject(prefab);
-                        Close();
+                        failedPaths.Add(_csvPaths[i]);
+                        _failures.Add($"{fileName}: {error}");
                     }
                 }
             }
-        }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
 
-        private void Browse()
-        {
-            string path = EditorUtility.OpenFilePanel("Select screenplay CSV", "", "csv");
-            if (string.IsNullOrEmpty(path)) return; // cancelled
+            Debug.Log($"[Chatterbox] Created {created.Count}/{_csvPaths.Count} ChatterBox(es).");
 
-            _csvPath = path;
-            _error = null;
+            if (created.Count > 0)
+            {
+                EditorUtility.FocusProjectWindow();
+                Selection.objects = created.ToArray();
+                EditorGUIUtility.PingObject(created[created.Count - 1]);
+            }
+
+            // Close when everything worked; otherwise keep only the failed files so they can be fixed and retried
+            if (failedPaths.Count == 0)
+            {
+                Close();
+                return;
+            }
+
+            _csvPaths.Clear();
+            _csvPaths.AddRange(failedPaths);
         }
 
         // Kept separate from the window so it can also be called from code or tests
