@@ -12,16 +12,18 @@ namespace Chatterbox.Editor
 {
     /*
      * Tools > ChatterBox > Create ChatterBox
-     * Pick one or more csv files; each one creates a ChatterBox named after the csv,
-     * in Assets/Chatterbox/ChatterBoxes/<CsvName>/:
-     *  - a copy of the csv
-     *  - <CsvName>_Screenplay.asset, already imported from the csv
-     *  - <CsvName>.prefab, a variant of ChatterBox_Prefab with the screenplay assigned
+     * Pick one or more csv files; each one creates a ChatterBox named after the csv:
+     *  - Chatterbox/ChatterBoxes/<CsvName>.prefab          variant of ChatterBox_Prefab with the screenplay assigned
+     *  - Chatterbox/Dialogues/<CsvName>_Screenplay.asset   already imported from the csv
+     *  - Chatterbox/Dialogues/csv/<CsvName>.csv            only for csv files picked from outside the project;
+     *                                                      csv files already in the project are used where they are
      */
     public class CreateChatterBoxWindow : EditorWindow
     {
-        private const string BasePrefabPath = "Assets/Chatterbox/Prefab/ChatterBox_Prefab.prefab";
-        private const string OutputRoot = "Assets/Chatterbox/ChatterBoxes";
+        private const string BasePrefabPath = "Assets/Chatterbox/ChatterBoxes/ChatterBox_Prefab.prefab";
+        private const string ChatterBoxesFolder = "Assets/Chatterbox/ChatterBoxes";
+        private const string ScreenplaysFolder = "Assets/Chatterbox/Dialogues";
+        private const string PlaywrightFolder = "Assets/Chatterbox/Dialogues/csv";
 
         private readonly List<string> _csvPaths = new List<string>(); // full paths, one ChatterBox each
         private readonly List<string> _failures = new List<string>(); // "file: reason" from the last run
@@ -197,40 +199,64 @@ namespace Chatterbox.Editor
                 return null;
             }
 
+            EnsureFolder(ChatterBoxesFolder);
+            EnsureFolder(ScreenplaysFolder);
+            EnsureFolder(PlaywrightFolder);
+
             // The ChatterBox is named after the csv; a number is added if that name is taken
             string name = GetUniqueName(Path.GetFileNameWithoutExtension(csvPath));
-            string folder = CreateOutputFolder(name);
+            string screenPlayPath = $"{ScreenplaysFolder}/{name}_Screenplay.asset";
+            string prefabPath = $"{ChatterBoxesFolder}/{name}.prefab";
 
-            // 1. Copy the csv into the project so Unity can load it as a TextAsset
-            string csvAssetPath = $"{folder}/{Path.GetFileName(csvPath)}";
-            File.Copy(csvPath, csvAssetPath);
-            AssetDatabase.ImportAsset(csvAssetPath);
+            // 1. The csv as a TextAsset: used in place if it's in the project, otherwise copied into Playwright
+            string csvAssetPath = GetCsvAssetPath(csvPath, out bool copied);
             var csv = AssetDatabase.LoadAssetAtPath<TextAsset>(csvAssetPath);
 
             // 2. Screenplay, imported with the existing csv importer
             var screenPlay = CreateInstance<ScreenPlayData>();
             screenPlay.csvImport = csv;
-            AssetDatabase.CreateAsset(screenPlay, $"{folder}/{name}_Screenplay.asset");
+            AssetDatabase.CreateAsset(screenPlay, screenPlayPath);
             ScreenPlayCsvImporter.Import(screenPlay, csv);
 
             if (screenPlay.importState != ImportState.Success)
             {
-                AssetDatabase.DeleteAsset(folder); // don't leave half-made ChatterBoxes behind
+                Cleanup(screenPlayPath, copied ? csvAssetPath : null); // don't leave half-made ChatterBoxes behind
                 error = "The csv could not be imported, check the Console for details.";
                 return null;
             }
 
             // 3. Prefab variant with the screenplay assigned
-            GameObject prefab = CreatePrefabVariant(basePrefab, screenPlay, $"{folder}/{name}.prefab", out error);
+            GameObject prefab = CreatePrefabVariant(basePrefab, screenPlay, prefabPath, out error);
             if (prefab == null)
             {
-                AssetDatabase.DeleteAsset(folder);
+                Cleanup(screenPlayPath, copied ? csvAssetPath : null);
                 return null;
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log($"[Chatterbox] Created ChatterBox '{name}' in {folder}");
+            Debug.Log($"[Chatterbox] Created ChatterBox '{name}' at {prefabPath}");
             return prefab;
+        }
+
+        // Returns the csv's "Assets/..." path, copying it into Playwright first if it lives outside the project
+        private static string GetCsvAssetPath(string csvPath, out bool copied)
+        {
+            string fullPath = Path.GetFullPath(csvPath).Replace('\\', '/');
+            string dataPath = Application.dataPath.Replace('\\', '/') + "/";
+            copied = !fullPath.StartsWith(dataPath);
+
+            if (!copied) return "Assets/" + fullPath.Substring(dataPath.Length);
+
+            string assetPath = AssetDatabase.GenerateUniqueAssetPath($"{PlaywrightFolder}/{Path.GetFileName(csvPath)}");
+            File.Copy(fullPath, assetPath);
+            AssetDatabase.ImportAsset(assetPath);
+            return assetPath;
+        }
+
+        private static void Cleanup(string screenPlayPath, string copiedCsvPath)
+        {
+            AssetDatabase.DeleteAsset(screenPlayPath);
+            if (copiedCsvPath != null) AssetDatabase.DeleteAsset(copiedCsvPath); // never delete the user's own csv
         }
 
         private static GameObject CreatePrefabVariant(GameObject basePrefab, ScreenPlayData screenPlay, string path, out string error)
@@ -263,22 +289,29 @@ namespace Chatterbox.Editor
             }
         }
 
-        // "Event_Shop" -> "Event_Shop", or "Event_Shop_2" if a ChatterBox with that name already exists
+        // "Event_Shop" -> "Event_Shop", or "Event_Shop_2" if a ChatterBox or screenplay with that name already exists
         private static string GetUniqueName(string baseName)
         {
             string name = baseName;
-            for (int i = 2; AssetDatabase.IsValidFolder($"{OutputRoot}/{name}"); i++)
+            for (int i = 2; NameTaken(name); i++)
                 name = $"{baseName}_{i}";
             return name;
         }
 
-        private static string CreateOutputFolder(string name)
+        private static bool NameTaken(string name)
         {
-            if (!AssetDatabase.IsValidFolder(OutputRoot))
-                AssetDatabase.CreateFolder(Path.GetDirectoryName(OutputRoot), Path.GetFileName(OutputRoot));
+            return AssetDatabase.LoadMainAssetAtPath($"{ChatterBoxesFolder}/{name}.prefab") != null
+                || AssetDatabase.LoadMainAssetAtPath($"{ScreenplaysFolder}/{name}_Screenplay.asset") != null;
+        }
 
-            string guid = AssetDatabase.CreateFolder(OutputRoot, name);
-            return AssetDatabase.GUIDToAssetPath(guid);
+        // Creates every missing folder in a path like "Assets/Dialogue/ChatterBoxes"
+        private static void EnsureFolder(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path)) return;
+
+            string parent = Path.GetDirectoryName(path).Replace('\\', '/');
+            EnsureFolder(parent);
+            AssetDatabase.CreateFolder(parent, Path.GetFileName(path));
         }
     }
 }

@@ -54,7 +54,7 @@ MonoBehaviour:
     expression: 2
     invalidExpression: None
   characters:
-  - {fileID: 11400000, guid: efec03eafe3bf4d3984c729d6057a97d, type: 2}
-  - {fileID: 11400000, guid: 266d135fb07254e7aa3940dafe38ad43, type: 2}
-  csvImport: {fileID: 4900000, guid: 9f2405ae60de64acd9fe3c9f4e17f8d9, type: 3}
+  - {fileID: 11400000, guid: 06fb2c8973ba341e4b499e17c4d3a8b5, type: 2}
+  - {fileID: 11400000, guid: 4d302ff06eef4481781d4650b35e5f0d, type: 2}
+  csvImport: {fileID: 4900000, guid: 87be674fbb48a4fe2b5d6fb3a3e387d3, type: 3}
   importState: 2

@@ -10,39 +10,39 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
-  m_Name: Event_Storm_Screenplay
+  m_Name: Event_LostKey_Screenplay
   m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.ScreenPlayData
   dialogueList:
   - speaker: Tuto
-    text: Did you hear that? Thunder already!
+    text: Oh no! The key to the lantern tower is gone!
     expression: 5
     invalidExpression: None
   - speaker: Rial
-    text: The clouds came out of nowhere. That is not a normal storm.
-    expression: 1
-    invalidExpression: None
-  - speaker: Tuto
-    text: If the rain reaches the lantern the flame will go out for good.
-    expression: 3
-    invalidExpression: None
-  - speaker: Rial
-    text: Then I suggest we stop talking and start running.
-    expression: 6
-    invalidExpression: None
-  - speaker: Tuto
-    text: The tower is just ahead. Stay close to me!
-    expression: 2
-    invalidExpression: None
-  - speaker: Rial
-    text: Do not worry. I am an excellent runner when I am scared.
+    text: Have you checked your pockets? All twelve of them?
     expression: 7
     invalidExpression: None
   - speaker: Tuto
-    text: We made it. Now let us light this lantern once and for all.
+    text: Of course I checked my pockets!
+    expression: 4
+    invalidExpression: None
+  - speaker: Rial
+    text: Then I guess it grew legs and walked off. Happens to the best of us.
+    expression: 6
+    invalidExpression: None
+  - speaker: Tuto
+    text: Without that key we cannot reach the top of the hill.
+    expression: 3
+    invalidExpression: None
+  - speaker: Rial
+    text: Fine. I saw a crow carrying something shiny toward the old well.
     expression: 1
     invalidExpression: None
+  - speaker: Tuto
+    text: Rial! Why did you not say so sooner?
+    expression: 2
+    invalidExpression: None
   characters:
-  - {fileID: 11400000, guid: efec03eafe3bf4d3984c729d6057a97d, type: 2}
-  - {fileID: 11400000, guid: 266d135fb07254e7aa3940dafe38ad43, type: 2}
-  csvImport: {fileID: 4900000, guid: 73504c406cbc044b4ae2a09ae165873e, type: 3}
+  - {fileID: 11400000, guid: 06fb2c8973ba341e4b499e17c4d3a8b5, type: 2}
+  - {fileID: 11400000, guid: 4d302ff06eef4481781d4650b35e5f0d, type: 2}
+  csvImport: {fileID: 4900000, guid: 28915fd31a61f4ce785abd76cea0f2a0, type: 3}
   importState: 2
