@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
+  m_Name: Event_Shop_Screenplay
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.ScreenPlayData
+  dialogueList:
+  - speaker: Rial
+    text: Welcome to Rial's Remarkable Goods! Everything is on sale.
+    expression: 2
+    invalidExpression: None
+  - speaker: Tuto
+    text: Since when do you own a shop?
+    expression: 5
+    invalidExpression: None
+  - speaker: Rial
+    text: Since about five minutes ago. Business is booming.
+    expression: 7
+    invalidExpression: None
+  - speaker: Rial
+    text: Lantern oil is ten coins. Lantern oil with a smile is twenty.
+    expression: 6
+    invalidExpression: None
+  - speaker: Tuto
+    text: That is the same oil!
+    expression: 4
+    invalidExpression: None
+  - speaker: Rial
+    text: The smile is handmade. Take it or leave it.
+    expression: 1
+    invalidExpression: None
+  characters:
+  - {fileID: 11400000, guid: 266d135fb07254e7aa3940dafe38ad43, type: 2}
+  - {fileID: 11400000, guid: efec03eafe3bf4d3984c729d6057a97d, type: 2}
+  csvImport: {fileID: 4900000, guid: ef76f1b63d4a14d24b89655bb4f1afdc, type: 3}
+  importState: 2

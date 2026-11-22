@@ -12,10 +12,11 @@ namespace Chatterbox.Editor
 {
     /*
      * Tools > ChatterBox > Create ChatterBox
-     * Pick one or more csv files; each one creates, in Assets/Chatterbox/ChatterBoxes/ChatterBox_n/:
+     * Pick one or more csv files; each one creates a ChatterBox named after the csv,
+     * in Assets/Chatterbox/ChatterBoxes/<CsvName>/:
      *  - a copy of the csv
-     *  - Screenplay_n.asset, already imported from the csv
-     *  - ChatterBox_n.prefab, a variant of ChatterBox_Prefab with the screenplay assigned
+     *  - <CsvName>_Screenplay.asset, already imported from the csv
+     *  - <CsvName>.prefab, a variant of ChatterBox_Prefab with the screenplay assigned
      */
     public class CreateChatterBoxWindow : EditorWindow
     {
@@ -196,8 +197,9 @@ namespace Chatterbox.Editor
                 return null;
             }
 
-            int n = GetNextNumber();
-            string folder = CreateOutputFolder(n);
+            // The ChatterBox is named after the csv; a number is added if that name is taken
+            string name = GetUniqueName(Path.GetFileNameWithoutExtension(csvPath));
+            string folder = CreateOutputFolder(name);
 
             // 1. Copy the csv into the project so Unity can load it as a TextAsset
             string csvAssetPath = $"{folder}/{Path.GetFileName(csvPath)}";
@@ -208,7 +210,7 @@ namespace Chatterbox.Editor
             // 2. Screenplay, imported with the existing csv importer
             var screenPlay = CreateInstance<ScreenPlayData>();
             screenPlay.csvImport = csv;
-            AssetDatabase.CreateAsset(screenPlay, $"{folder}/Screenplay_{n}.asset");
+            AssetDatabase.CreateAsset(screenPlay, $"{folder}/{name}_Screenplay.asset");
             ScreenPlayCsvImporter.Import(screenPlay, csv);
 
             if (screenPlay.importState != ImportState.Success)
@@ -219,7 +221,7 @@ namespace Chatterbox.Editor
             }
 
             // 3. Prefab variant with the screenplay assigned
-            GameObject prefab = CreatePrefabVariant(basePrefab, screenPlay, $"{folder}/ChatterBox_{n}.prefab", out error);
+            GameObject prefab = CreatePrefabVariant(basePrefab, screenPlay, $"{folder}/{name}.prefab", out error);
             if (prefab == null)
             {
                 AssetDatabase.DeleteAsset(folder);
@@ -227,7 +229,7 @@ namespace Chatterbox.Editor
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log($"[Chatterbox] Created ChatterBox_{n} in {folder}");
+            Debug.Log($"[Chatterbox] Created ChatterBox '{name}' in {folder}");
             return prefab;
         }
 
@@ -261,19 +263,21 @@ namespace Chatterbox.Editor
             }
         }
 
-        private static int GetNextNumber()
+        // "Event_Shop" -> "Event_Shop", or "Event_Shop_2" if a ChatterBox with that name already exists
+        private static string GetUniqueName(string baseName)
         {
-            int n = 1;
-            while (AssetDatabase.IsValidFolder($"{OutputRoot}/ChatterBox_{n}")) n++;
-            return n;
+            string name = baseName;
+            for (int i = 2; AssetDatabase.IsValidFolder($"{OutputRoot}/{name}"); i++)
+                name = $"{baseName}_{i}";
+            return name;
         }
 
-        private static string CreateOutputFolder(int n)
+        private static string CreateOutputFolder(string name)
         {
             if (!AssetDatabase.IsValidFolder(OutputRoot))
                 AssetDatabase.CreateFolder(Path.GetDirectoryName(OutputRoot), Path.GetFileName(OutputRoot));
 
-            string guid = AssetDatabase.CreateFolder(OutputRoot, $"ChatterBox_{n}");
+            string guid = AssetDatabase.CreateFolder(OutputRoot, name);
             return AssetDatabase.GUIDToAssetPath(guid);
         }
     }

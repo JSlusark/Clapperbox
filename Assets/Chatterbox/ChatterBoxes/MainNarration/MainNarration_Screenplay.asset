@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
+  m_Name: MainNarration_Screenplay
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.ScreenPlayData
+  dialogueList:
+  - speaker: Tuto
+    text: Welcome to the village of Lumen! It is so good to finally meet you.
+    expression: 2
+    invalidExpression: None
+  - speaker: Tuto
+    text: Long ago the great lantern on the hill kept every night bright and warm.
+    expression: 1
+    invalidExpression: None
+  - speaker: Tuto
+    text: But one winter the lantern went dark and nobody knows why.
+    expression: 3
+    invalidExpression: None
+  - speaker: Rial
+    text: Some say it ran out of oil. I say someone forgot to pay the bill.
+    expression: 6
+    invalidExpression: None
+  - speaker: Tuto
+    text: Rial! This is a serious story!
+    expression: 4
+    invalidExpression: None
+  - speaker: Rial
+    text: I am being very serious. Bills are serious business.
+    expression: 7
+    invalidExpression: None
+  - speaker: Tuto
+    text: Since that night the forest has grown darker and the paths keep changing.
+    expression: 1
+    invalidExpression: None
+  - speaker: Tuto
+    text: And now the lantern has started flickering again all on its own!
+    expression: 5
+    invalidExpression: None
+  - speaker: Rial
+    text: Which means someone has to climb up there and take a look.
+    expression: 1
+    invalidExpression: None
+  - speaker: Tuto
+    text: That someone is you! Let us get going before the sun sets.
+    expression: 2
+    invalidExpression: None
+  characters:
+  - {fileID: 11400000, guid: efec03eafe3bf4d3984c729d6057a97d, type: 2}
+  - {fileID: 11400000, guid: 266d135fb07254e7aa3940dafe38ad43, type: 2}
+  csvImport: {fileID: 4900000, guid: 9f2405ae60de64acd9fe3c9f4e17f8d9, type: 3}
+  importState: 2

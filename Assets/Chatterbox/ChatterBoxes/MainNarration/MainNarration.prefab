@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &457489847759592171
+--- !u!1001 &2397541700290932353
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -11,7 +11,7 @@ PrefabInstance:
     - target: {fileID: 229949855850407221, guid: 25a704849983a40f1bcd5d1eb8d9fd27, type: 3}
       propertyPath: screenPlay
       value: 
-      objectReference: {fileID: 11400000, guid: 91a293813d0ab48c6b56333b62caf2ab, type: 2}
+      objectReference: {fileID: 11400000, guid: 584cadd2791cf45d88d618652581b433, type: 2}
     - target: {fileID: 6032587139757177857, guid: 25a704849983a40f1bcd5d1eb8d9fd27, type: 3}
       propertyPath: m_LocalPosition.x
       value: 296.14484
@@ -54,7 +54,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8782971131600511218, guid: 25a704849983a40f1bcd5d1eb8d9fd27, type: 3}
       propertyPath: m_Name
-      value: ChatterBox_1
+      value: MainNarration
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
