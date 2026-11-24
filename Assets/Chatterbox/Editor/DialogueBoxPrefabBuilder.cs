@@ -168,7 +168,7 @@ namespace Chatterbox.Editor
                 NameAlign = TextAlignmentOptions.Center,
                 SampleText = "You really thought you could sneak past me? Not a chance!",
                 TextRect = new Rect(900, 800, 570, 140),
-                TextFont = "Kalam-Regular.ttf",
+                TextFont = "ShortStack-Regular.ttf",
                 TextColor = Hex("2A1A20"), TextSize = 42,
                 NameCover = new Rect(1027, 697, 190, 68), NameCoverColor = Hex("231A1E"),
             },
@@ -176,28 +176,34 @@ namespace Chatterbox.Editor
             {
                 SampleName = "Kai.exe",
                 NameRect = new Rect(446, 668, 800, 52),
+                NameFont = "W95FA.otf", NameStyle = FontStyles.Bold, // W95FA has one weight, so this is TMP's bold
                 NameColor = Color.white, NameSize = 36,
                 SampleText = "Hey. Got a minute? There's something weird going on with the server logs.",
                 TextRect = new Rect(750, 760, 600, 220),
+                TextFont = "W95FA.otf",
                 TextColor = Color.black, TextSize = 36,
             },
             ["06-farm"] = new TextLayout
             {
                 SampleName = "Junko",
                 NameRect = new Rect(640, 545, 440, 80),
+                NameFont = "Nunito-BlackItalic.ttf", NameStyle = FontStyles.Normal, // the font file is already Black Italic
                 NameColor = Hex("FFF1E0"), NameSize = 48,
                 NameAlign = TextAlignmentOptions.Center,
                 SampleText = "Morning! The carrots came up overnight. Want to help me pull a few before the crows find them?",
                 TextRect = new Rect(610, 665, 900, 230),
+                TextFont = "Nunito-Regular.ttf",
                 TextColor = Hex("5A2A22"),
             },
             ["06-gta"] = new TextLayout
             {
                 SampleName = "Roxy",
                 NameRect = new Rect(640, 720, 1000, 70),
+                NameFont = "BebasNeue-Regular.ttf", NameStyle = FontStyles.Normal, // Bebas is already heavy, no faux bold
                 NameColor = Hex("FFB020"), NameSize = 56,
                 SampleText = "Listen up. The deal goes down at midnight by the docks. Don't be late, and don't bring anyone.",
                 TextRect = new Rect(640, 800, 1150, 220),
+                TextFont = "Oswald-Regular.ttf",
                 TextColor = Color.white, TextSize = 42,
             },
         };
