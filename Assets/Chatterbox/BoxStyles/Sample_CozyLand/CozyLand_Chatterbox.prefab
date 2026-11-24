@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1626, y: -827.42}
+  m_AnchoredPosition: {x: 1618, y: -895.42}
   m_SizeDelta: {x: 47, y: 37}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &5986005015689796064
@@ -110,7 +110,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 640, y: -545}
+  m_AnchoredPosition: {x: 632, y: -613}
   m_SizeDelta: {x: 440, y: 80}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &926797160611461133
@@ -262,7 +262,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 656.6, y: -677.9}
+  m_AnchoredPosition: {x: 648.6, y: -745.9}
   m_SizeDelta: {x: 912.3168, y: 186.5186}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &2752249599646377240
@@ -565,7 +565,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 146, y: -561}
+  m_AnchoredPosition: {x: 138, y: -629}
   m_SizeDelta: {x: 422, y: 398}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &7723012113060039762
@@ -702,7 +702,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 146, y: -513}
+  m_AnchoredPosition: {x: 138, y: -581}
   m_SizeDelta: {x: 1645, y: 469}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &5004602013731669634
@@ -778,7 +778,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 146, y: -561}
+  m_AnchoredPosition: {x: 138, y: -629}
   m_SizeDelta: {x: 422, y: 398}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &3041409649250810921
@@ -844,7 +844,7 @@ GameObject:
   - component: {fileID: 3938617652146068437}
   - component: {fileID: 4878309606821161348}
   m_Layer: 0
-  m_Name: Audiomanager
+  m_Name: AudioManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1007,9 +1007,9 @@ RectTransform:
   - {fileID: 4649210242927378808}
   - {fileID: 4503103393968567830}
   - {fileID: 2164791172545483884}
-  - {fileID: 6306967359420199020}
   - {fileID: 1343405711098165362}
   - {fileID: 1764963724310905277}
+  - {fileID: 6306967359420199020}
   m_Father: {fileID: 9137157829839804691}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}

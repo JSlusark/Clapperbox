@@ -149,9 +149,9 @@ RectTransform:
   - {fileID: 622903970842362027}
   - {fileID: 8909568180889472808}
   - {fileID: 5177525377384751408}
-  - {fileID: 2867229825068493575}
   - {fileID: 2820251640032256249}
   - {fileID: 390868479820694450}
+  - {fileID: 2867229825068493575}
   m_Father: {fileID: 8850399783625695061}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
@@ -333,7 +333,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 750, y: -768}
+  m_AnchoredPosition: {x: 767, y: -766}
   m_SizeDelta: {x: 600, y: 212}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &6923675272216429399
@@ -484,7 +484,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 446, y: -668}
+  m_AnchoredPosition: {x: 463, y: -666}
   m_SizeDelta: {x: 800, y: 52}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &5937914949968518987
@@ -635,7 +635,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1391, y: -944}
+  m_AnchoredPosition: {x: 1408, y: -942}
   m_SizeDelta: {x: 25, y: 42}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &6299804719371368604
@@ -688,7 +688,7 @@ GameObject:
   - component: {fileID: 5293661493708569257}
   - component: {fileID: 472285186405185035}
   m_Layer: 0
-  m_Name: Audiomanager
+  m_Name: AudioManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -854,7 +854,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 503, y: -768}
+  m_AnchoredPosition: {x: 520, y: -766}
   m_SizeDelta: {x: 219, y: 218}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &5301623547821925004
@@ -920,7 +920,7 @@ GameObject:
   - component: {fileID: 7483194284721706433}
   - component: {fileID: 5325309475467453775}
   m_Layer: 0
-  m_Name: Window
+  m_Name: Box
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -942,7 +942,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 412, y: -568}
+  m_AnchoredPosition: {x: 429, y: -566}
   m_SizeDelta: {x: 1099, y: 548}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &7483194284721706433
@@ -1018,7 +1018,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 503, y: -768}
+  m_AnchoredPosition: {x: 520, y: -766}
   m_SizeDelta: {x: 219, y: 218}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &2936230757226754423
