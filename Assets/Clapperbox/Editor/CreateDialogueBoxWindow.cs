@@ -1,0 +1,913 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using DefaultNamespace;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+
+namespace Clapperbox.Editor
+{
+    /*
+     * Tools > Clapperbox > Create Dialogue Box
+     *  1. Style: every dialogue box prefab inside a folder of BoxStyles (BoxStyles/<Folder>/<Prefab>.prefab).
+     *     New folders with a dialogue box prefab show up automatically.
+     *  2. CSV source: "Use example CSV" (only for Sample_<Name> folders that have a <Name>_sample.csv)
+     *     or "Use custom CSV" (always available, the only choice for non-sample styles).
+     *  3. Custom CSV: add one or more csv files; each one creates its own dialogue box named after it:
+     *  - Clapperbox/DialogueBoxes/<CsvName>.prefab              variant of the chosen style with the screenplay assigned
+     *  - Clapperbox/ScreenPlays/<CsvName>_Screenplay.asset   already imported from the csv
+     *  - Clapperbox/ScreenPlays/csv/<CsvName>.csv            only for csv files picked from outside the project;
+     *                                                        csv files already in the project are used where they are
+     *  4. Before creating, every csv is checked for speakers and expressions the project has no data for
+     *     (MissingCharacterData). They are listed under the csv and Create stays disabled until the user
+     *     either creates them (Yes) or drops the csvs that need them (No).
+     *     Names close to existing ones are listed as possible typos with a suggestion; they are not created
+     *     until fixed in the csv or marked "Not a typo".
+     */
+    public class CreateDialogueBoxWindow : EditorWindow
+    {
+        private const string BasePrefabPath = "Assets/Clapperbox/DialogueBoxes/DialogueBox_Prefab.prefab";
+        private const string DialogueBoxesFolder = "Assets/Clapperbox/DialogueBoxes";
+        private const string ScreenplaysFolder = "Assets/Clapperbox/ScreenPlays";
+        private const string PlaywrightFolder = "Assets/Clapperbox/ScreenPlays/csv";
+        private const string StylesFolder = "Assets/Clapperbox/BoxStyles";
+        private const string SamplePrefix = "Sample_";
+        private const string StylePrefKey = "Clapperbox.CreateDialogueBox.Style"; // remembers the last style picked
+        private const int ThumbWidth = 1920, ThumbHeight = 1080; // rendered at full size, then cropped to the box
+        private const int ThumbMargin = 16;                       // px kept around the box when cropping
+        private const float MaxPreviewHeight = 260;
+        private static readonly Color PreviewBackground = new Color(0.16f, 0.16f, 0.16f);
+
+        private enum CsvSource { Example, Custom }
+
+        private class BoxStyle
+        {
+            public GameObject Prefab;
+            public string Label;      // shown in the dropdown
+            public TextAsset Example; // the sample's csv, null for non-sample styles
+        }
+
+        private readonly List<string> _csvPaths = new List<string>(); // full paths, one dialogue box each
+        private readonly List<string> _failures = new List<string>(); // "file: reason" from the last run
+        private readonly Dictionary<string, MissingCharacterData.Report> _reports = new Dictionary<string, MissingCharacterData.Report>(); // by csv path
+        private readonly MissingCharacterData.Created _created = new MissingCharacterData.Created(); // made by Yes
+        private Vector2 _createdScroll;
+        private const float CreatedMaxHeight = 220; // the created list scrolls past this
+        private bool _checkDirty = true; // csv list, source or project changed: check the csvs again
+        private readonly HashSet<string> _notTypos = new HashSet<string>(); // typos the user marked as intended
+        private Vector2 _scroll;
+
+        private readonly List<BoxStyle> _styles = new List<BoxStyle>();
+        private readonly Dictionary<GameObject, Texture2D> _thumbnails = new Dictionary<GameObject, Texture2D>();
+        private int _styleIndex;
+        private CsvSource _source = CsvSource.Example;
+
+        [MenuItem("Tools/Clapperbox/Create Dialogue Box")]
+        public static void Open()
+        {
+            var window = GetWindow<CreateDialogueBoxWindow>(true, "Create Dialogue Box");
+            window.minSize = new Vector2(420, 520);
+        }
+
+        private void OnEnable() => LoadStyles();
+
+        // A csv may have been fixed in a text editor while the window was in the background
+        private void OnFocus() => _checkDirty = true;
+
+        private void OnDisable()
+        {
+            foreach (var texture in _thumbnails.Values)
+                if (texture != null) DestroyImmediate(texture);
+            _thumbnails.Clear();
+        }
+
+        // Style prefabs and folders can be added or edited while the window is open
+        private void OnProjectChange()
+        {
+            OnDisable();
+            LoadStyles();
+            _checkDirty = true; // characters or sprites may have been added or removed
+            Repaint();
+        }
+
+        // ---- Layout styles ---------------------------------------------------------------------------------
+
+        private const string StyleLabelText = "Selected style:";
+        private const string DialogueLabelText = "Selected dialogue:";
+
+        private static GUIStyle _headerStyle, _paddingStyle;
+
+        private static GUIStyle HeaderStyle => _headerStyle ??= new GUIStyle(EditorStyles.boldLabel) { fontSize = 15 };
+
+        // A little room on every side of the window's content
+        private static GUIStyle PaddingStyle => _paddingStyle ??= new GUIStyle { padding = new RectOffset(10, 10, 6, 6) };
+
+        // Both dropdown labels share one width so the dropdowns line up, sized to the longer label (no extra gap)
+        private static float DropdownLabelWidth => Mathf.Max(
+            EditorStyles.boldLabel.CalcSize(new GUIContent(StyleLabelText)).x,
+            EditorStyles.boldLabel.CalcSize(new GUIContent(DialogueLabelText)).x) + 2;
+
+        // Bold label right next to its dropdown
+        private static int LabeledPopup(string label, int index, string[] options)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(label, EditorStyles.boldLabel, GUILayout.Width(DropdownLabelWidth));
+            index = EditorGUILayout.Popup(index, options);
+            EditorGUILayout.EndHorizontal();
+            return index;
+        }
+
+        private void OnGUI()
+        {
+            EditorGUILayout.BeginVertical(PaddingStyle, GUILayout.ExpandHeight(true));
+            try { DrawContent(); }
+            finally { EditorGUILayout.EndVertical(); }
+        }
+
+        private void DrawContent()
+        {
+            DrawStylePicker();
+            if (SelectedStyle == null) return;
+            if (_checkDirty) RunChecks();
+            EditorGUILayout.Space(8);
+
+            DrawSourcePicker();
+            EditorGUILayout.Space(4);
+
+            if (UsingExample)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField($"{SelectedStyle.Example.name}.csv");
+                if (GUILayout.Button("Locate", GUILayout.Width(60))) EditorGUIUtility.PingObject(SelectedStyle.Example);
+                EditorGUILayout.EndHorizontal();
+                DrawIssues(ExamplePath);
+
+                DrawMissingWarning();
+                DrawCreated();
+                GUILayout.FlexibleSpace();
+                DrawFailures();
+                using (new EditorGUI.DisabledScope(HasWarnings))
+                    if (GUILayout.Button("Create Dialogue Box", GUILayout.Height(28))) CreateFromExample();
+                return;
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Select CSV...")) AddFile();
+            if (GUILayout.Button("Add all from folder...")) AddFolder();
+            using (new EditorGUI.DisabledScope(_csvPaths.Count == 0))
+                if (GUILayout.Button("Clear", GUILayout.Width(60)))
+                {
+                    _csvPaths.Clear();
+                    _created.Characters.Clear();
+                    _created.Expressions.Clear();
+                    _checkDirty = true;
+                }
+            EditorGUILayout.EndHorizontal();
+
+            DrawFileList();
+            DrawMissingWarning();
+            DrawCreated();
+            DrawFailures();
+
+            string label = _csvPaths.Count == 1 ? "Create 1 Dialogue Box" : $"Create {_csvPaths.Count} Dialogue Boxes";
+            using (new EditorGUI.DisabledScope(_csvPaths.Count == 0 || HasWarnings))
+                if (GUILayout.Button(label, GUILayout.Height(28))) CreateAll();
+        }
+
+        // ---- Style picker ---------------------------------------------------------------------------------
+
+        // One entry per dialogue box prefab inside a sub-folder of BoxStyles; prefabs loose in BoxStyles are ignored
+        private void LoadStyles()
+        {
+            _styles.Clear();
+            if (AssetDatabase.IsValidFolder(StylesFolder))
+            {
+                var found = AssetDatabase.FindAssets("t:Prefab", new[] { StylesFolder })
+                    .Select(AssetDatabase.GUIDToAssetPath)
+                    .Select(path => (path, folder: StyleFolderName(path)))
+                    .Where(p => p.folder != null)
+                    .Select(p => (p.path, p.folder, prefab: AssetDatabase.LoadAssetAtPath<GameObject>(p.path)))
+                    .Where(p => p.prefab != null && p.prefab.GetComponentInChildren<DialogueManager>(true) != null)
+                    .OrderBy(p => p.folder).ThenBy(p => p.path)
+                    .ToList();
+
+                foreach (var group in found.GroupBy(p => p.folder))
+                {
+                    var example = FindExampleCsv(group.Key);
+                    bool several = group.Count() > 1;
+                    foreach (var p in group)
+                        _styles.Add(new BoxStyle
+                        {
+                            Prefab = p.prefab,
+                            Label = several ? $"{group.Key}/{p.prefab.name}" : group.Key, // "/" makes a sub-menu
+                            Example = example,
+                        });
+                }
+            }
+
+            string remembered = EditorPrefs.GetString(StylePrefKey, "");
+            _styleIndex = Mathf.Max(0, _styles.FindIndex(s => AssetDatabase.GetAssetPath(s.Prefab) == remembered));
+            ClampSource();
+        }
+
+        // "Assets/Clapperbox/BoxStyles/Sample_CozyLand/X.prefab" -> "Sample_CozyLand"; null when not inside a sub-folder
+        private static string StyleFolderName(string prefabPath)
+        {
+            string relative = prefabPath.Substring(StylesFolder.Length).TrimStart('/');
+            int slash = relative.IndexOf('/');
+            return slash > 0 ? relative.Substring(0, slash) : null;
+        }
+
+        // Sample_CozyLand -> the project's CozyLand_sample.csv (preferring the style folder, then ScreenPlays/csv)
+        private static TextAsset FindExampleCsv(string folder)
+        {
+            if (!folder.StartsWith(SamplePrefix, StringComparison.OrdinalIgnoreCase)) return null;
+
+            string fileName = folder.Substring(SamplePrefix.Length) + "_sample.csv";
+            string path = AssetDatabase.FindAssets(Path.GetFileNameWithoutExtension(fileName) + " t:TextAsset")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(p => string.Equals(Path.GetFileName(p), fileName, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(p => p.StartsWith($"{StylesFolder}/{folder}/"))
+                .ThenByDescending(p => p.StartsWith($"{PlaywrightFolder}/"))
+                .ThenBy(p => p)
+                .FirstOrDefault();
+            return path != null ? AssetDatabase.LoadAssetAtPath<TextAsset>(path) : null;
+        }
+
+        private BoxStyle SelectedStyle => _styles.Count > 0 ? _styles[_styleIndex] : null;
+        private bool UsingExample => _source == CsvSource.Example && SelectedStyle?.Example != null;
+
+        // Non-sample styles can only use a custom csv
+        private void ClampSource()
+        {
+            if (SelectedStyle?.Example == null) _source = CsvSource.Custom;
+        }
+
+        private void DrawStylePicker()
+        {
+            DrawHeader("Choose your style:",
+                "Sets your dialogue box UI.\n" +
+                "Each style is a prefab that already includes the logic for setting up your screenplay presentation.");
+            if (_styles.Count == 0)
+            {
+                EditorGUILayout.HelpBox($"No dialogue box styles found. Add a folder with a dialogue box prefab to {StylesFolder}.", MessageType.Warning);
+                return;
+            }
+
+            // Preview of the selected style, cropped to the dialogue box itself
+            Texture2D thumbnail = GetThumbnail(SelectedStyle.Prefab);
+            float aspect = thumbnail != null ? (float)thumbnail.width / thumbnail.height : 16f / 9f;
+            Rect preview = GUILayoutUtility.GetAspectRect(aspect, GUILayout.ExpandWidth(true), GUILayout.MaxHeight(MaxPreviewHeight));
+            EditorGUI.DrawRect(preview, PreviewBackground);
+            if (thumbnail != null) GUI.DrawTexture(preview, thumbnail, ScaleMode.ScaleToFit);
+
+            EditorGUILayout.BeginHorizontal();
+            int picked = LabeledPopup(StyleLabelText, _styleIndex, _styles.Select(s => s.Label).ToArray());
+            if (GUILayout.Button("Locate", GUILayout.Width(60))) EditorGUIUtility.PingObject(SelectedStyle.Prefab);
+            EditorGUILayout.EndHorizontal();
+
+            if (picked != _styleIndex)
+            {
+                bool hadExample = SelectedStyle.Example != null;
+                _styleIndex = picked;
+                EditorPrefs.SetString(StylePrefKey, AssetDatabase.GetAssetPath(SelectedStyle.Prefab));
+                if (!hadExample && SelectedStyle.Example != null) _source = CsvSource.Example; // samples default to their example
+                ClampSource();
+                _failures.Clear();
+                _checkDirty = true;
+            }
+        }
+
+        private void DrawSourcePicker()
+        {
+            DrawHeader("Load a screenplay",
+                "Screenplays are .CSV files.\n" +
+                "Screenplays load dialogue and assets into your dialogue box.\n" +
+                "Each row of the .CSV contains the speaker name, their line and their linked asset.");
+
+            if (SelectedStyle.Example == null)
+            {
+                using (new EditorGUI.DisabledScope(true))
+                    LabeledPopup(DialogueLabelText, 0, new[] { "Custom CSV" });
+                return;
+            }
+
+            int picked = LabeledPopup(DialogueLabelText, (int)_source, new[] { "Sample CSV", "Custom CSV" });
+            if (picked != (int)_source)
+            {
+                _source = (CsvSource)picked;
+                _failures.Clear();
+                _checkDirty = true;
+            }
+        }
+
+        // Bold header with an info-icon subtitle right under it, and some room before the section's content
+        private static void DrawHeader(string title, string subtitle)
+        {
+            EditorGUILayout.LabelField(title, HeaderStyle, GUILayout.Height(22));
+            GUILayout.Space(-2); // pulls the subtitle up against its header
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(EditorGUIUtility.IconContent("console.infoicon.sml"), GUILayout.Width(18), GUILayout.Height(18));
+            EditorGUILayout.LabelField(subtitle, EditorStyles.wordWrappedMiniLabel);
+            EditorGUILayout.EndHorizontal();
+
+            GUILayout.Space(6);
+        }
+
+        private Texture2D GetThumbnail(GameObject style)
+        {
+            if (style == null) return null;
+            if (!_thumbnails.TryGetValue(style, out var texture) || texture == null)
+                _thumbnails[style] = texture = RenderThumbnail(style);
+            return texture;
+        }
+
+        // Renders the prefab's UI as it looks in game: an instance in a preview scene, its canvas switched to a camera
+        private static Texture2D RenderThumbnail(GameObject prefab)
+        {
+            var scene = EditorSceneManager.NewPreviewScene();
+            var target = new RenderTexture(ThumbWidth, ThumbHeight, 24);
+            try
+            {
+                var cameraObject = new GameObject("ThumbnailCamera");
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(cameraObject, scene);
+                var camera = cameraObject.AddComponent<Camera>();
+                camera.enabled = false;
+                camera.scene = scene;
+                camera.orthographic = true;
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                // Alpha 0 marks empty screen, so the box can be found and cropped afterwards
+                camera.backgroundColor = new Color(PreviewBackground.r, PreviewBackground.g, PreviewBackground.b, 0);
+                camera.targetTexture = target;
+
+                var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+                foreach (var canvas in instance.GetComponentsInChildren<Canvas>(true))
+                {
+                    if (!canvas.isRootCanvas) continue;
+                    canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                    canvas.worldCamera = camera;
+                    canvas.planeDistance = 5;
+                }
+                Canvas.ForceUpdateCanvases();
+                foreach (var text in instance.GetComponentsInChildren<TMPro.TMP_Text>(true)) text.ForceMeshUpdate();
+                camera.Render();
+
+                var previous = RenderTexture.active;
+                RenderTexture.active = target;
+                var full = new Texture2D(ThumbWidth, ThumbHeight, TextureFormat.RGBA32, false);
+                full.ReadPixels(new Rect(0, 0, ThumbWidth, ThumbHeight), 0, 0);
+                RenderTexture.active = previous;
+                camera.targetTexture = null;
+
+                var texture = CropToContent(full);
+                DestroyImmediate(full);
+                return texture;
+            }
+            finally
+            {
+                DestroyImmediate(target);
+                EditorSceneManager.ClosePreviewScene(scene);
+            }
+        }
+
+        // Cuts the render down to the visibly drawn pixels plus a small margin; the whole render if nothing was drawn
+        private static Texture2D CropToContent(Texture2D full)
+        {
+            int w = full.width, h = full.height;
+            Color32[] pixels = full.GetPixels32();
+            int minX = w, maxX = -1, minY = h, maxY = -1;
+            for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                if (pixels[y * w + x].a <= 12) continue; // ignore near-invisible pixels (faint sprite edges)
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+            }
+
+            if (maxX < 0) { minX = 0; minY = 0; maxX = w - 1; maxY = h - 1; }
+            minX = Mathf.Max(0, minX - ThumbMargin);
+            minY = Mathf.Max(0, minY - ThumbMargin);
+            maxX = Mathf.Min(w - 1, maxX + ThumbMargin);
+            maxY = Mathf.Min(h - 1, maxY + ThumbMargin);
+
+            int cw = maxX - minX + 1, ch = maxY - minY + 1;
+            var cropped = new Texture2D(cw, ch, TextureFormat.RGB24, false) { hideFlags = HideFlags.HideAndDontSave };
+            cropped.SetPixels(full.GetPixels(minX, minY, cw, ch)); // RGB is already drawn over the preview background
+            cropped.Apply();
+            return cropped;
+        }
+
+        // ---- CSV list --------------------------------------------------------------------------------------
+
+        // The list doubles as a drop area for csv files from Finder or the Project window
+        private void DrawFileList()
+        {
+            Rect dropArea = EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.ExpandHeight(true));
+            _scroll = EditorGUILayout.BeginScrollView(_scroll);
+
+            if (_csvPaths.Count == 0)
+                EditorGUILayout.LabelField("Drop csv files here", EditorStyles.centeredGreyMiniLabel);
+
+            for (int i = 0; i < _csvPaths.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField(new GUIContent(Path.GetFileName(_csvPaths[i]), _csvPaths[i])); // tooltip shows the full path
+                if (GUILayout.Button("✕", GUILayout.Width(22)))
+                {
+                    _csvPaths.RemoveAt(i);
+                    _checkDirty = true;
+                    GUIUtility.ExitGUI(); // list changed mid-draw, stop this repaint
+                }
+                EditorGUILayout.EndHorizontal();
+                DrawIssues(_csvPaths[i]);
+            }
+
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+
+            HandleDrop(dropArea);
+        }
+
+        private void HandleDrop(Rect dropArea)
+        {
+            Event evt = Event.current;
+            if (evt.type != EventType.DragUpdated && evt.type != EventType.DragPerform) return;
+            if (!dropArea.Contains(evt.mousePosition)) return;
+
+            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+            if (evt.type == EventType.DragPerform)
+            {
+                DragAndDrop.AcceptDrag();
+                foreach (string path in DragAndDrop.paths) // Finder gives full paths, the Project window "Assets/..." paths
+                {
+                    if (Directory.Exists(path)) AddCsvsInFolder(path);
+                    else AddPath(path);
+                }
+            }
+            evt.Use();
+        }
+
+        private void DrawFailures()
+        {
+            if (_failures.Count == 0) return;
+            EditorGUILayout.HelpBox("Not created:\n" + string.Join("\n", _failures), MessageType.Error);
+        }
+
+        private void AddFile()
+        {
+            string path = EditorUtility.OpenFilePanel("Select screenplay CSV", "", "csv");
+            if (!string.IsNullOrEmpty(path)) AddPath(path); // empty = cancelled
+        }
+
+        private void AddFolder()
+        {
+            string folder = EditorUtility.OpenFolderPanel("Select a folder of screenplay CSVs", "", "");
+            if (!string.IsNullOrEmpty(folder)) AddCsvsInFolder(folder);
+        }
+
+        private void AddCsvsInFolder(string folder)
+        {
+            foreach (string path in Directory.GetFiles(folder, "*.csv").OrderBy(p => p))
+                AddPath(path);
+        }
+
+        private void AddPath(string path)
+        {
+            if (!path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)) return;
+
+            string fullPath = Path.GetFullPath(path);
+            if (!_csvPaths.Contains(fullPath)) _csvPaths.Add(fullPath);
+            _failures.Clear(); // the list changed, old results no longer apply
+            _checkDirty = true;
+        }
+
+        // ---- Missing character data ------------------------------------------------------------------------
+
+        private string ExamplePath => SelectedStyle?.Example != null
+            ? Path.GetFullPath(AssetDatabase.GetAssetPath(SelectedStyle.Example))
+            : null;
+
+        private IEnumerable<string> CurrentCsvPaths => UsingExample ? new[] { ExamplePath } : _csvPaths;
+
+        private bool HasWarnings => CurrentCsvPaths.Any(p => _reports.TryGetValue(p, out var r) && !r.IsEmpty);
+        private bool HasMissing => CurrentCsvPaths.Any(p => _reports.TryGetValue(p, out var r) && r.HasMissing);
+        private bool HasTypos => CurrentCsvPaths.Any(p => _reports.TryGetValue(p, out var r) && r.Typos.Count > 0);
+
+        // Checks every listed csv against the characters in the project (one lookup shared by all csvs)
+        private void RunChecks()
+        {
+            _checkDirty = false;
+            _reports.Clear();
+            var characters = CharacterObjectsImport.FindAllCharacters();
+            foreach (string path in CurrentCsvPaths)
+                if (File.Exists(path))
+                    _reports[path] = MissingCharacterData.Check(File.ReadAllText(path), characters, _notTypos);
+        }
+
+        // Indented lines under a csv: each missing character once, each missing expression once per character
+        private void DrawIssues(string csvPath)
+        {
+            if (csvPath == null || !_reports.TryGetValue(csvPath, out var report) || report.IsEmpty) return;
+
+            foreach (string name in report.MissingCharacters)
+                DrawIssueLine("console.erroricon.sml", $"{Bold(name)}: found missing character folder from script");
+            foreach (var (name, expression) in report.MissingExpressions)
+                DrawIssueLine("console.erroricon.sml", $"{Bold(expression)}: missing expression sprite found for {Bold(name)}");
+
+            foreach (var typo in report.Typos)
+            {
+                string text = typo.Expression == null
+                    ? $"{Bold(typo.Character)}: character not found, did you mean {Bold(typo.Suggestion)}?"
+                    : $"{Bold(typo.Expression)}: expression not found for {Bold(typo.Character)}, did you mean {Bold(typo.Suggestion)}?";
+                int clicked = DrawIssueLine("console.warnicon.sml", text, "Yes", "Not a typo");
+                if (clicked == 1) FixTypo(csvPath, typo);
+                if (clicked == 2)
+                {
+                    _notTypos.Add(typo.Key); // from now on it is treated as missing data to create
+                    _checkDirty = true;
+                    GUIUtility.ExitGUI();
+                }
+            }
+        }
+
+        private static GUIStyle _issueStyle;
+        private static GUIStyle IssueStyle => _issueStyle ??= new GUIStyle(EditorStyles.wordWrappedLabel) { richText = true };
+
+        // Character and expression names in bold; "<" would start a rich-text tag, so it is swapped for a look-alike
+        private static string Bold(string name) => $"<b>{name.Replace("<", "‹")}</b>";
+
+        // Returns which of the optional buttons was clicked (1, 2, ...), or 0
+        private static int DrawIssueLine(string icon, string text, params string[] buttons)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(20);
+            GUILayout.Label(EditorGUIUtility.IconContent(icon), GUILayout.Width(18), GUILayout.Height(18));
+            EditorGUILayout.LabelField(text, IssueStyle);
+            int clicked = 0;
+            for (int i = 0; i < buttons.Length; i++)
+                if (GUILayout.Button(buttons[i], GUILayout.ExpandWidth(false))) clicked = i + 1;
+            EditorGUILayout.EndHorizontal();
+            return clicked;
+        }
+
+        // "Yes" on a typo: writes the suggested name into the csv, so the line is fixed at its source
+        private void FixTypo(string csvPath, MissingCharacterData.Typo typo)
+        {
+            int changed = typo.Expression == null
+                ? ScreenPlayCsvImporter.ReplaceField(csvPath, 0, typo.Character, typo.Suggestion)
+                : ScreenPlayCsvImporter.ReplaceField(csvPath, 1, typo.Expression, typo.Suggestion, typo.Character);
+            Debug.Log($"[Clapperbox] {Path.GetFileName(csvPath)}: replaced '{typo.Expression ?? typo.Character}' " +
+                      $"with '{typo.Suggestion}' on {changed} row(s).");
+
+            string assetPath = ToAssetPath(csvPath);
+            if (assetPath != null) AssetDatabase.ImportAsset(assetPath); // keeps the project's copy in sync
+            _checkDirty = true;
+            GUIUtility.ExitGUI();
+        }
+
+        // Full path -> "Assets/..." path, or null when the file is outside the project
+        private static string ToAssetPath(string fullPath)
+        {
+            string path = Path.GetFullPath(fullPath).Replace('\\', '/');
+            string dataPath = Application.dataPath.Replace('\\', '/') + "/";
+            return path.StartsWith(dataPath) ? "Assets/" + path.Substring(dataPath.Length) : null;
+        }
+
+        private void DrawMissingWarning()
+        {
+            if (!HasWarnings) return;
+
+            EditorGUILayout.Space(6);
+            if (HasMissing)
+                DrawWarningText(
+                    "The csv refers to data that is missing in the character folder, this data will be created automatically " +
+                    "from a template character folder which can be edited later. " +
+                    "Missing expressions of existing characters are created as white images, to be replaced with the real sprite.");
+            if (HasTypos)
+                DrawWarningText(
+                    "Some names look like typos of existing ones. Fix them in the csv (the list updates when you come back " +
+                    "to this window), or press Not a typo to create them as new.");
+
+            EditorGUILayout.LabelField("Continue?", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(!HasMissing)) // typos are never created by Yes
+                if (GUILayout.Button("Yes")) CreateMissingData();
+            if (GUILayout.Button("No")) DropCsvsWithWarnings();
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(6);
+        }
+
+        private static void DrawWarningText(string text)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon.sml"), GUILayout.Width(18), GUILayout.Height(18));
+            EditorGUILayout.LabelField(text, EditorStyles.wordWrappedLabel);
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void CreateMissingData()
+        {
+            var reports = CurrentCsvPaths
+                .Where(p => _reports.TryGetValue(p, out var r) && r.HasMissing)
+                .Select(p => _reports[p]);
+            _created.Add(MissingCharacterData.CreateMissing(reports, out var errors));
+            _failures.Clear();
+            _failures.AddRange(errors);
+            _checkDirty = true;
+            GUIUtility.ExitGUI(); // the window's content changed mid-draw
+        }
+
+        // No: the csvs that need missing data are taken off the list (a sample csv falls back to Custom CSV)
+        private void DropCsvsWithWarnings()
+        {
+            if (UsingExample) _source = CsvSource.Custom;
+            else _csvPaths.RemoveAll(p => _reports.TryGetValue(p, out var r) && !r.IsEmpty);
+            _checkDirty = true;
+            GUIUtility.ExitGUI();
+        }
+
+        // Compact, scrollable summary of what Yes created:
+        //   New character added           -> each new character with Locate
+        //   New expressions added for ... -> each existing character with Locate, then its new sprite files
+        private void DrawCreated()
+        {
+            if (_created.IsEmpty) return;
+
+            var newNames = _created.Characters.Select(c => c.character).ToList();
+            var forExisting = _created.Expressions
+                .Where(e => !newNames.Contains(e.character))
+                .GroupBy(e => e.character)
+                .ToList();
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            _createdScroll = EditorGUILayout.BeginScrollView(_createdScroll,
+                GUILayout.MaxHeight(CreatedMaxHeight), GUILayout.ExpandHeight(false));
+
+            if (_created.Characters.Count > 0)
+            {
+                EditorGUILayout.LabelField(_created.Characters.Count == 1 ? "New character added" : "New characters added",
+                    EditorStyles.boldLabel);
+                GUILayout.Space(2);
+                foreach (var (name, folder) in _created.Characters)
+                {
+                    DrawCreatedName(name, folder);
+                    // Sprites the template lacked, made white for the new character
+                    var extra = _created.Expressions.Where(e => e.character == name).Select(e => Path.GetFileName(e.path)).ToList();
+                    if (extra.Count > 0) EditorGUILayout.LabelField(string.Join(", ", extra), EditorStyles.wordWrappedMiniLabel);
+                }
+            }
+
+            if (forExisting.Count > 0)
+            {
+                if (_created.Characters.Count > 0) GUILayout.Space(12);
+                EditorGUILayout.LabelField("New expressions added for existing characters", EditorStyles.boldLabel);
+                for (int i = 0; i < forExisting.Count; i++)
+                {
+                    GUILayout.Space(2);
+                    if (i > 0)
+                    {
+                        Rect line = GUILayoutUtility.GetRect(1, 1, GUILayout.ExpandWidth(true));
+                        EditorGUI.DrawRect(line, new Color(0.5f, 0.5f, 0.5f, 0.4f));
+                        GUILayout.Space(2);
+                    }
+                    var group = forExisting[i];
+                    DrawCreatedName(group.Key, Path.GetDirectoryName(group.First().path).Replace('\\', '/'));
+                    EditorGUILayout.LabelField(string.Join(", ", group.Select(e => Path.GetFileName(e.path))),
+                        EditorStyles.wordWrappedMiniLabel);
+                }
+                GUILayout.Space(2);
+            }
+
+            EditorGUILayout.EndScrollView();
+            EditorGUILayout.EndVertical();
+        }
+
+        // Bold name with a Locate button that highlights the folder in the Project window
+        private static void DrawCreatedName(string name, string folder)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(new GUIContent(name, folder), EditorStyles.boldLabel);
+            if (GUILayout.Button("Locate", GUILayout.Width(60)))
+                EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(folder));
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void CreateAll()
+        {
+            _failures.Clear();
+            var created = new List<UnityEngine.Object>();
+            var failedPaths = new List<string>();
+
+            try
+            {
+                for (int i = 0; i < _csvPaths.Count; i++)
+                {
+                    string fileName = Path.GetFileName(_csvPaths[i]);
+                    EditorUtility.DisplayProgressBar("Creating Dialogue Boxes", fileName, (float)i / _csvPaths.Count);
+
+                    GameObject prefab = CreateFromCsv(_csvPaths[i], SelectedStyle.Prefab, out string error);
+                    if (prefab != null) created.Add(prefab);
+                    else
+                    {
+                        failedPaths.Add(_csvPaths[i]);
+                        _failures.Add($"{fileName}: {error}");
+                    }
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+
+            Debug.Log($"[Clapperbox] Created {created.Count}/{_csvPaths.Count} dialogue box(es).");
+
+            if (created.Count > 0)
+            {
+                EditorUtility.FocusProjectWindow();
+                Selection.objects = created.ToArray();
+                EditorGUIUtility.PingObject(created[created.Count - 1]);
+            }
+
+            // Close when everything worked; otherwise keep only the failed files so they can be fixed and retried
+            if (failedPaths.Count == 0)
+            {
+                Close();
+                return;
+            }
+
+            _csvPaths.Clear();
+            _csvPaths.AddRange(failedPaths);
+        }
+
+        private void CreateFromExample()
+        {
+            _failures.Clear();
+            string csvPath = Path.GetFullPath(AssetDatabase.GetAssetPath(SelectedStyle.Example));
+            GameObject prefab = CreateFromCsv(csvPath, SelectedStyle.Prefab, out string error);
+            if (prefab == null)
+            {
+                _failures.Add($"{Path.GetFileName(csvPath)}: {error}");
+                return;
+            }
+
+            EditorUtility.FocusProjectWindow();
+            Selection.activeObject = prefab;
+            EditorGUIUtility.PingObject(prefab);
+            Close();
+        }
+
+        // Kept separate from the window so it can also be called from code or tests
+        public static GameObject CreateFromCsv(string csvPath, out string error) => CreateFromCsv(csvPath, null, out error);
+
+        // style: the dialogue box prefab to make a variant of; null = DialogueBox_Prefab
+        public static GameObject CreateFromCsv(string csvPath, GameObject style, out string error)
+        {
+            error = null;
+            if (string.IsNullOrEmpty(csvPath) || !File.Exists(csvPath))
+            {
+                error = "The selected csv file could not be found.";
+                return null;
+            }
+
+            var basePrefab = style != null ? style : AssetDatabase.LoadAssetAtPath<GameObject>(BasePrefabPath);
+            if (basePrefab == null)
+            {
+                error = $"Base prefab not found at {BasePrefabPath}.";
+                return null;
+            }
+
+            EnsureFolder(DialogueBoxesFolder);
+            EnsureFolder(ScreenplaysFolder);
+            EnsureFolder(PlaywrightFolder);
+
+            // The dialogue box is named after the csv; a number is added if that name is taken
+            string name = GetUniqueName(Path.GetFileNameWithoutExtension(csvPath));
+            string screenPlayPath = $"{ScreenplaysFolder}/{name}_Screenplay.asset";
+            string prefabPath = $"{DialogueBoxesFolder}/{name}.prefab";
+
+            // 1. The csv as a TextAsset: used in place if it's in the project, otherwise copied into Playwright
+            string csvAssetPath = GetCsvAssetPath(csvPath, out bool copied);
+            var csv = AssetDatabase.LoadAssetAtPath<TextAsset>(csvAssetPath);
+
+            // 2. Screenplay, imported with the existing csv importer.
+            //    A screenplay left behind by a deleted dialogue box is reused, so its name (and any references to it) carry on
+            var screenPlay = AssetDatabase.LoadAssetAtPath<ScreenPlayData>(screenPlayPath);
+            bool reused = screenPlay != null;
+            if (!reused)
+            {
+                screenPlay = CreateInstance<ScreenPlayData>();
+                AssetDatabase.CreateAsset(screenPlay, screenPlayPath);
+            }
+            screenPlay.csvImport = csv;
+            ScreenPlayCsvImporter.Import(screenPlay, csv);
+
+            // Don't leave half-made dialogue boxes behind; a reused screenplay is kept, it existed before this run
+            string createdScreenPlayPath = reused ? null : screenPlayPath;
+            if (screenPlay.importState != ImportState.Success)
+            {
+                Cleanup(createdScreenPlayPath, copied ? csvAssetPath : null);
+                error = "The csv could not be imported, check the Console for details.";
+                return null;
+            }
+
+            // 3. Prefab variant with the screenplay assigned
+            GameObject prefab = CreatePrefabVariant(basePrefab, screenPlay, prefabPath, out error);
+            if (prefab == null)
+            {
+                Cleanup(createdScreenPlayPath, copied ? csvAssetPath : null);
+                return null;
+            }
+
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[Clapperbox] Created dialogue box '{name}' at {prefabPath}");
+            return prefab;
+        }
+
+        // Returns the csv's "Assets/..." path, copying it into Playwright first if it lives outside the project
+        private static string GetCsvAssetPath(string csvPath, out bool copied)
+        {
+            string fullPath = Path.GetFullPath(csvPath).Replace('\\', '/');
+            string dataPath = Application.dataPath.Replace('\\', '/') + "/";
+            copied = !fullPath.StartsWith(dataPath);
+
+            if (!copied) return "Assets/" + fullPath.Substring(dataPath.Length);
+
+            string assetPath = AssetDatabase.GenerateUniqueAssetPath($"{PlaywrightFolder}/{Path.GetFileName(csvPath)}");
+            File.Copy(fullPath, assetPath);
+            AssetDatabase.ImportAsset(assetPath);
+            return assetPath;
+        }
+
+        private static void Cleanup(string screenPlayPath, string copiedCsvPath)
+        {
+            if (screenPlayPath != null) AssetDatabase.DeleteAsset(screenPlayPath);
+            if (copiedCsvPath != null) AssetDatabase.DeleteAsset(copiedCsvPath); // never delete the user's own csv
+        }
+
+        private static GameObject CreatePrefabVariant(GameObject basePrefab, ScreenPlayData screenPlay, string path, out string error)
+        {
+            error = null;
+
+            // A preview scene keeps the temporary instance out of the open scene
+            var previewScene = EditorSceneManager.NewPreviewScene();
+            try
+            {
+                var instance = (GameObject)PrefabUtility.InstantiatePrefab(basePrefab, previewScene);
+                var manager = instance.GetComponentInChildren<DialogueManager>(true);
+                if (manager == null)
+                {
+                    error = $"{basePrefab.name} has no DialogueManager.";
+                    return null;
+                }
+
+                // screenPlay is a private [SerializeField], so it is set through SerializedObject
+                var serializedManager = new SerializedObject(manager);
+                serializedManager.FindProperty("screenPlay").objectReferenceValue = screenPlay;
+                serializedManager.ApplyModifiedPropertiesWithoutUndo();
+
+                // Saving an instance of a prefab creates a variant of it
+                return PrefabUtility.SaveAsPrefabAsset(instance, path);
+            }
+            finally
+            {
+                EditorSceneManager.ClosePreviewScene(previewScene);
+            }
+        }
+
+        // "Event_Shop" -> "Event_Shop", or "Event_Shop_2" if a dialogue box with that name already exists
+        private static string GetUniqueName(string baseName)
+        {
+            string name = baseName;
+            for (int i = 2; NameTaken(name); i++)
+                name = $"{baseName}_{i}";
+            return name;
+        }
+
+        // Only an existing dialogue box takes a name. A leftover screenplay doesn't (it gets reused),
+        // unless something other than a screenplay sits at its path
+        private static bool NameTaken(string name)
+        {
+            string screenPlayPath = $"{ScreenplaysFolder}/{name}_Screenplay.asset";
+            return AssetDatabase.LoadMainAssetAtPath($"{DialogueBoxesFolder}/{name}.prefab") != null
+                || (AssetDatabase.LoadMainAssetAtPath(screenPlayPath) != null
+                    && AssetDatabase.LoadAssetAtPath<ScreenPlayData>(screenPlayPath) == null);
+        }
+
+        // Creates every missing folder in a path like "Assets/Clapperbox/DialogueBoxes"
+        private static void EnsureFolder(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path)) return;
+
+            string parent = Path.GetDirectoryName(path).Replace('\\', '/');
+            EnsureFolder(parent);
+            AssetDatabase.CreateFolder(parent, Path.GetFileName(path));
+        }
+    }
+}
+#endif

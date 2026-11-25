@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76671199700204b999a9f53c0e47dbd7, type: 3}
+  m_Name: Cidra_data
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.CharacterData
+  speakerName: Cidra
+  speakerColor: {r: 1, g: 1, b: 1, a: 1}
+  expressions:
+  - name: Angry
+    sprite: {fileID: 21300000, guid: 5bb21e6610a38487f892b05c388fe358, type: 3}
+  - name: Cheeky
+    sprite: {fileID: 21300000, guid: 0d880f432a33443a9a65aa814ca50131, type: 3}
+  - name: Happy
+    sprite: {fileID: 21300000, guid: 41310ae6c476b45a3af1665f11171b7f, type: 3}
+  - name: Neutral
+    sprite: {fileID: 21300000, guid: 75d4525c3f8aa4b21a129f9b72b43c79, type: 3}
+  - name: Sad
+    sprite: {fileID: 21300000, guid: 94b01b44cc64341ac9287dbb1f34049c, type: 3}
+  - name: Surprised
+    sprite: {fileID: 21300000, guid: 4e64366c71159492abb1481528020859, type: 3}
+  voiceClip: {fileID: 0}
+  voiceType: 0

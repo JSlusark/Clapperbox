@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Clapperbox</title>
+  <defs>
+    <clipPath id="clapper-clip">
+      <rect x="0" y="0" width="352" height="64" rx="14"/>
+    </clipPath>
+  </defs>
+
+  <!-- Full square background, for platforms that apply their own corner mask (iOS, Android) -->
+  <rect x="0" y="0" width="512" height="512" fill="#2D4BB5"/>
+
+  <!-- Clapper stick, tilted open like the board just before the clap -->
+  <g transform="translate(96 140) rotate(-14)">
+    <g clip-path="url(#clapper-clip)">
+      <rect x="0" y="0" width="352" height="64" fill="#D4E5FF"/>
+      <polygon points="24,0 72,0 40,64 -8,64" fill="#14214F"/>
+      <polygon points="120,0 168,0 136,64 88,64" fill="#14214F"/>
+      <polygon points="216,0 264,0 232,64 184,64" fill="#14214F"/>
+      <polygon points="312,0 360,0 328,64 280,64" fill="#14214F"/>
+    </g>
+  </g>
+
+  <!-- Speech bubble body (the dialogue box), with the clapper's bottom stripe across its top -->
+  <path d="M96 186 H416 a24 24 0 0 1 24 24 V378 a24 24 0 0 1 -24 24 H206 L148 452 L156 402 H96 a24 24 0 0 1 -24 -24 V210 a24 24 0 0 1 24 -24 Z"
+        fill="#D4E5FF"/>
+  <rect x="72" y="186" width="368" height="44" fill="#D4E5FF"/>
+  <g fill="#14214F">
+    <polygon points="104,186 148,186 128,230 84,230"/>
+    <polygon points="196,186 240,186 220,230 176,230"/>
+    <polygon points="288,186 332,186 312,230 268,230"/>
+    <polygon points="380,186 424,186 404,230 360,230"/>
+  </g>
+  <rect x="72" y="230" width="368" height="8" fill="#14214F" opacity="0.15"/>
+
+  <!-- Three voice blips -->
+  <circle cx="180" cy="312" r="26" fill="#F25C54"/>
+  <circle cx="256" cy="312" r="26" fill="#F25C54"/>
+  <circle cx="332" cy="312" r="26" fill="#F25C54"/>
+</svg>

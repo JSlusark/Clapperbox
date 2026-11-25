@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76671199700204b999a9f53c0e47dbd7, type: 3}
+  m_Name: Shaz_data
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.CharacterData
+  speakerName: Shaz
+  speakerColor: {r: 1, g: 1, b: 1, a: 1}
+  expressions:
+  - name: Angry
+    sprite: {fileID: 21300000, guid: 165efb1a8fe884bf895408c3e1b8cd7e, type: 3}
+  - name: Cheeky
+    sprite: {fileID: 21300000, guid: 2415b3de8a2e94edc81dd8bd97a6db61, type: 3}
+  - name: Happy
+    sprite: {fileID: 21300000, guid: fb6d06201edaf48648132efbc78d07b4, type: 3}
+  - name: Neutral
+    sprite: {fileID: 21300000, guid: b9534faceafcb46a5b156f7d582bfeee, type: 3}
+  - name: Sad
+    sprite: {fileID: 21300000, guid: 96a2358a6bf7747d2b2b152235ba5c7e, type: 3}
+  - name: Surprised
+    sprite: {fileID: 21300000, guid: fcf73302191a745ce99618a587b90f2c, type: 3}
+  voiceClip: {fileID: 0}
+  voiceType: 0

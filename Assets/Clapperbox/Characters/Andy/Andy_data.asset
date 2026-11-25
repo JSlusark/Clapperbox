@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76671199700204b999a9f53c0e47dbd7, type: 3}
+  m_Name: Andy_data
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.CharacterData
+  speakerName: Andy
+  speakerColor: {r: 1, g: 1, b: 1, a: 1}
+  expressions:
+  - name: Angry
+    sprite: {fileID: 21300000, guid: 3e39bcaf27c464875b659d566db45ac3, type: 3}
+  - name: Cheeky
+    sprite: {fileID: 21300000, guid: 78d84a0c711fe4a7f9dc86f659caed8c, type: 3}
+  - name: Happy
+    sprite: {fileID: 21300000, guid: fe2296a7db7984054bbd9bd9f8df1442, type: 3}
+  - name: Neutral
+    sprite: {fileID: 21300000, guid: 9e94b3d7634a543ca98a0f3eaa5497a6, type: 3}
+  - name: Sad
+    sprite: {fileID: 21300000, guid: 5169ea70f376b44a4b5414d23eb210fa, type: 3}
+  - name: Surprised
+    sprite: {fileID: 21300000, guid: 310af00d8213a4b8499aec791b967b86, type: 3}
+  voiceClip: {fileID: 0}
+  voiceType: 0
