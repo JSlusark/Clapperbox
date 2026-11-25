@@ -21,6 +21,9 @@ namespace Chatterbox.Editor
      *  - Chatterbox/ScreenPlays/<CsvName>_Screenplay.asset   already imported from the csv
      *  - Chatterbox/ScreenPlays/raw_csv/<CsvName>.csv        only for csv files picked from outside the project;
      *                                                        csv files already in the project are used where they are
+     *  4. Before creating, every csv is checked for speakers and expressions the project has no data for
+     *     (MissingCharacterData). They are listed under the csv and Create stays disabled until the user
+     *     either creates them from Characters/0_template (Yes) or drops the csvs that need them (No).
      */
     public class CreateChatterBoxWindow : EditorWindow
     {
@@ -47,6 +50,9 @@ namespace Chatterbox.Editor
 
         private readonly List<string> _csvPaths = new List<string>(); // full paths, one ChatterBox each
         private readonly List<string> _failures = new List<string>(); // "file: reason" from the last run
+        private readonly Dictionary<string, MissingCharacterData.Report> _reports = new Dictionary<string, MissingCharacterData.Report>(); // by csv path
+        private readonly List<string> _createdPaths = new List<string>(); // character data made from the template
+        private bool _checkDirty = true; // csv list, source or project changed: check the csvs again
         private Vector2 _scroll;
 
         private readonly List<BoxStyle> _styles = new List<BoxStyle>();
@@ -75,6 +81,7 @@ namespace Chatterbox.Editor
         {
             OnDisable();
             LoadStyles();
+            _checkDirty = true; // characters or sprites may have been added or removed
             Repaint();
         }
 
@@ -116,6 +123,7 @@ namespace Chatterbox.Editor
         {
             DrawStylePicker();
             if (SelectedStyle == null) return;
+            if (_checkDirty) RunChecks();
             EditorGUILayout.Space(8);
 
             DrawSourcePicker();
@@ -127,10 +135,14 @@ namespace Chatterbox.Editor
                 EditorGUILayout.LabelField($"{SelectedStyle.Example.name}.csv");
                 if (GUILayout.Button("Locate", GUILayout.Width(60))) EditorGUIUtility.PingObject(SelectedStyle.Example);
                 EditorGUILayout.EndHorizontal();
+                DrawIssues(ExamplePath);
 
+                DrawMissingWarning();
+                DrawCreated();
                 GUILayout.FlexibleSpace();
                 DrawFailures();
-                if (GUILayout.Button("Create ChatterBox", GUILayout.Height(28))) CreateFromExample();
+                using (new EditorGUI.DisabledScope(HasWarnings))
+                    if (GUILayout.Button("Create ChatterBox", GUILayout.Height(28))) CreateFromExample();
                 return;
             }
 
@@ -138,14 +150,21 @@ namespace Chatterbox.Editor
             if (GUILayout.Button("Select CSV...")) AddFile();
             if (GUILayout.Button("Add all from folder...")) AddFolder();
             using (new EditorGUI.DisabledScope(_csvPaths.Count == 0))
-                if (GUILayout.Button("Clear", GUILayout.Width(60))) _csvPaths.Clear();
+                if (GUILayout.Button("Clear", GUILayout.Width(60)))
+                {
+                    _csvPaths.Clear();
+                    _createdPaths.Clear();
+                    _checkDirty = true;
+                }
             EditorGUILayout.EndHorizontal();
 
             DrawFileList();
+            DrawMissingWarning();
+            DrawCreated();
             DrawFailures();
 
             string label = _csvPaths.Count == 1 ? "Create 1 ChatterBox" : $"Create {_csvPaths.Count} ChatterBoxes";
-            using (new EditorGUI.DisabledScope(_csvPaths.Count == 0))
+            using (new EditorGUI.DisabledScope(_csvPaths.Count == 0 || HasWarnings))
                 if (GUILayout.Button(label, GUILayout.Height(28))) CreateAll();
         }
 
@@ -249,6 +268,7 @@ namespace Chatterbox.Editor
                 if (!hadExample && SelectedStyle.Example != null) _source = CsvSource.Example; // samples default to their example
                 ClampSource();
                 _failures.Clear();
+                _checkDirty = true;
             }
         }
 
@@ -271,6 +291,7 @@ namespace Chatterbox.Editor
             {
                 _source = (CsvSource)picked;
                 _failures.Clear();
+                _checkDirty = true;
             }
         }
 
@@ -391,9 +412,11 @@ namespace Chatterbox.Editor
                 if (GUILayout.Button("✕", GUILayout.Width(22)))
                 {
                     _csvPaths.RemoveAt(i);
+                    _checkDirty = true;
                     GUIUtility.ExitGUI(); // list changed mid-draw, stop this repaint
                 }
                 EditorGUILayout.EndHorizontal();
+                DrawIssues(_csvPaths[i]);
             }
 
             EditorGUILayout.EndScrollView();
@@ -452,6 +475,112 @@ namespace Chatterbox.Editor
             string fullPath = Path.GetFullPath(path);
             if (!_csvPaths.Contains(fullPath)) _csvPaths.Add(fullPath);
             _failures.Clear(); // the list changed, old results no longer apply
+            _checkDirty = true;
+        }
+
+        // ---- Missing character data ------------------------------------------------------------------------
+
+        private string ExamplePath => SelectedStyle?.Example != null
+            ? Path.GetFullPath(AssetDatabase.GetAssetPath(SelectedStyle.Example))
+            : null;
+
+        private IEnumerable<string> CurrentCsvPaths => UsingExample ? new[] { ExamplePath } : _csvPaths;
+
+        private bool HasWarnings => CurrentCsvPaths.Any(p => _reports.TryGetValue(p, out var r) && !r.IsEmpty);
+
+        // Checks every listed csv against the characters in the project (one lookup shared by all csvs)
+        private void RunChecks()
+        {
+            _checkDirty = false;
+            _reports.Clear();
+            var characters = CharacterObjectsImport.FindAllCharacters();
+            foreach (string path in CurrentCsvPaths)
+                if (File.Exists(path))
+                    _reports[path] = MissingCharacterData.Check(File.ReadAllText(path), characters);
+        }
+
+        // Indented lines under a csv: each missing character once, each missing expression once per character
+        private void DrawIssues(string csvPath)
+        {
+            if (csvPath == null || !_reports.TryGetValue(csvPath, out var report) || report.IsEmpty) return;
+
+            foreach (string name in report.MissingCharacters)
+                DrawIssueLine($"{name}: found missing character folder from script");
+            foreach (var (name, expression) in report.MissingExpressions)
+                DrawIssueLine($"{expression}: missing expression sprite found for {name}");
+        }
+
+        private static void DrawIssueLine(string text)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(20);
+            GUILayout.Label(EditorGUIUtility.IconContent("console.erroricon.sml"), GUILayout.Width(18), GUILayout.Height(18));
+            EditorGUILayout.LabelField(text, EditorStyles.wordWrappedLabel);
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawMissingWarning()
+        {
+            if (!HasWarnings) return;
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon.sml"), GUILayout.Width(18), GUILayout.Height(18));
+            EditorGUILayout.LabelField(
+                "The csv refers to data that is missing in the character folder, this data will be created automatically " +
+                "from a template character folder which can be edited later.",
+                EditorStyles.wordWrappedLabel);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.LabelField("Continue?", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Yes")) CreateMissingData();
+            if (GUILayout.Button("No")) DropCsvsWithWarnings();
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(6);
+        }
+
+        private void CreateMissingData()
+        {
+            var reports = CurrentCsvPaths
+                .Where(p => _reports.TryGetValue(p, out var r) && !r.IsEmpty)
+                .Select(p => _reports[p]);
+            var created = MissingCharacterData.CreateMissing(reports, out var errors);
+
+            foreach (string path in created)
+                if (!_createdPaths.Contains(path)) _createdPaths.Add(path);
+            _failures.Clear();
+            _failures.AddRange(errors);
+            _checkDirty = true;
+            GUIUtility.ExitGUI(); // the window's content changed mid-draw
+        }
+
+        // No: the csvs that need missing data are taken off the list (a sample csv falls back to Custom CSV)
+        private void DropCsvsWithWarnings()
+        {
+            if (UsingExample) _source = CsvSource.Custom;
+            else _csvPaths.RemoveAll(p => _reports.TryGetValue(p, out var r) && !r.IsEmpty);
+            _checkDirty = true;
+            GUIUtility.ExitGUI();
+        }
+
+        private void DrawCreated()
+        {
+            if (_createdPaths.Count == 0) return;
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField(
+                "Created from the template character. Check each folder and replace the template sprites and voice:",
+                EditorStyles.wordWrappedMiniLabel);
+            foreach (string path in _createdPaths)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.LabelField(new GUIContent(path.Substring("Assets/Chatterbox/".Length), path));
+                if (GUILayout.Button("Locate", GUILayout.Width(60)))
+                    EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(path));
+                EditorGUILayout.EndHorizontal();
+            }
+            EditorGUILayout.EndVertical();
         }
 
         private void CreateAll()

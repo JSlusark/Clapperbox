@@ -11,9 +11,6 @@ namespace Chatterbox.Editor
     [CustomEditor(typeof(CharacterData))]
     public class CharacterDataImport : Editor
     {
-        private CharacterData _inspectedObject;
-        private string _folder;
-
         // CONSTANTS
         private const string AudioFolder = "Voice";
         private const string SpritesFolder = "Expressions";
@@ -22,42 +19,43 @@ namespace Chatterbox.Editor
         {
             DrawDefaultInspector();
 
-            _inspectedObject = (CharacterData)target;
+            var inspectedObject = (CharacterData)target;
             GUILayout.Space(15);
 
-
-            // folder = GetFolderLocation();
-
             if (GUILayout.Button("Import Voice From Folder", GUILayout.Height(30)))
-                ImportAudio();
+                ImportVoice(inspectedObject);
 
             if (GUILayout.Button("Import Expressions From Folder", GUILayout.Height(30)))
-                ImportExpressions();
+                ImportExpressions(inspectedObject);
         }
 
-        private string GetFolderLocation()
+        // The folder the CharacterData asset sits in, e.g. "Assets/Chatterbox/Characters/Nugget"
+        public static string GetFolderLocation(CharacterData character)
         {
-            string assetLocation = AssetDatabase.GetAssetPath(_inspectedObject);
+            string assetLocation = AssetDatabase.GetAssetPath(character);
             return Path.GetDirectoryName(assetLocation);
         }
 
-        private void SaveImport()
-        {
-            EditorUtility.SetDirty(_inspectedObject);
-            AssetDatabase.SaveAssets();
+        public static string GetExpressionsFolder(CharacterData character) =>
+            Path.Combine(GetFolderLocation(character), SpritesFolder).Replace('\\', '/');
 
+        private static void SaveImport(CharacterData character)
+        {
+            EditorUtility.SetDirty(character);
+            AssetDatabase.SaveAssets();
         }
 
-        private void ImportAudio()
+        // Static so the Create ChatterBox tool can fill in characters it creates; returns false when nothing was imported
+        public static bool ImportVoice(CharacterData character)
         {
-            _folder = GetFolderLocation();
+            string folder = GetFolderLocation(character);
 
-            string audioPath = Path.Combine(_folder, AudioFolder);
+            string audioPath = Path.Combine(folder, AudioFolder);
 
             if (!Directory.Exists(audioPath))
             {
                 Debug.LogError($"[Voice] Folder missing");
-                return;
+                return false;
             }
 
             string[] audioFiles = Directory.GetFiles(audioPath);
@@ -75,35 +73,36 @@ namespace Chatterbox.Editor
                     clip = AssetDatabase.LoadAssetAtPath<AudioClip>(cleanPath);
                     if (clip != null)
                     {
-                        _inspectedObject.chatterSound = clip;
+                        character.chatterSound = clip;
                         break;
                     }
                 }
             }
 
-            if (!_inspectedObject.chatterSound)
+            if (!character.chatterSound)
             {
                 Debug.LogError($"[Voice] Could not import Voice file: folder might be empty, contain invalid name or file type");
-                return;
+                return false;
             }
 
-            SaveImport();
+            SaveImport(character);
             Debug.Log("Voice Import Successful");
+            return true;
         }
 
-        private void ImportExpressions()
+        public static bool ImportExpressions(CharacterData character)
         {
-            _folder = GetFolderLocation();
+            string folder = GetFolderLocation(character);
 
-            string spritesDirectory = Path.Combine(_folder, SpritesFolder);
+            string spritesDirectory = Path.Combine(folder, SpritesFolder);
             if (!Directory.Exists(spritesDirectory))
             {
                 Debug.LogError($"[Expressions] Missing target sprite folder directory at: {spritesDirectory}");
-                return;
+                return false;
             }
 
-            if (_inspectedObject.expressions.Count > 0)
-                _inspectedObject.expressions.Clear();
+            if (character.expressions == null) character.expressions = new List<ExpressionSprite>();
+            else character.expressions.Clear();
 
             string[] spriteFiles = Directory.GetFiles(spritesDirectory);
 
@@ -132,7 +131,7 @@ namespace Chatterbox.Editor
                         unrecognisedFiles.Add(fileName);
                     }
 
-                    _inspectedObject.expressions.Add(newExpression);
+                    character.expressions.Add(newExpression);
                 }
             }
 
@@ -144,15 +143,15 @@ namespace Chatterbox.Editor
                 Debug.Log($"Add the new expression <a href=\"{enumFilePath}\" line=\"1\">[here]</a> or check for correct file name and import again");
             }
 
-            if (_inspectedObject.expressions.Count == 0)
+            if (character.expressions.Count == 0)
             {
                 Debug.LogError($"[Expressions] Could not import expressions file: folder might be empty, contain invalid names or file types");
-                return;
+                return false;
             }
 
-            SaveImport();
+            SaveImport(character);
             Debug.Log("Expressions Import Successful");
-
+            return true;
         }
     }
 }

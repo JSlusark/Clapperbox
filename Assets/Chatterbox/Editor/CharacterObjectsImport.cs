@@ -43,7 +43,8 @@ public static class CharacterObjectsImport
         return uniqueSpeakers;
     }
 
-    private static Dictionary<string, CharacterData> FindAllCharacters()
+    // Every CharacterData in the project by speakerName; the first one wins when two share a name
+    public static Dictionary<string, CharacterData> FindAllCharacters()
     {
         Dictionary<string, CharacterData> charactersByName = new Dictionary<string, CharacterData>(); // Keys are unique in dictionary, makes it easier to avoid name duplicates
 

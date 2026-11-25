@@ -13,6 +13,20 @@ namespace DefaultNamespace
         private const string CsvSplitRegex = @",(?=(?:[^""]*""[^""]*"")*(?![^""]*""))";
 
 
+        // NAME and EXPRESSION of every well-formed row (header skipped), split the same way Import does.
+        // Used to check a csv before anything is created; malformed rows are left for Import to report.
+        public static List<(string speaker, string expression)> ReadRows(string csvText)
+        {
+            var rows = new List<(string speaker, string expression)>();
+            string[] lines = csvText.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] fields = Regex.Split(lines[i], CsvSplitRegex);
+                if (fields.Length == 3) rows.Add((fields[0].Trim(' '), fields[1].Trim(' ')));
+            }
+            return rows;
+        }
+
         public static bool IsCsvFile(TextAsset csvAsset)
         {
             if (csvAsset == null) return false;
