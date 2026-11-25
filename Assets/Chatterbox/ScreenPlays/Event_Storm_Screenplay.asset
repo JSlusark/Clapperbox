@@ -15,32 +15,25 @@ MonoBehaviour:
   dialogueList:
   - speaker: Tuto
     text: Did you hear that? Thunder already!
-    expression: 5
-    invalidExpression: None
+    expression: Surprised
   - speaker: Rial
     text: The clouds came out of nowhere. That is not a normal storm.
-    expression: 1
-    invalidExpression: None
+    expression: Neutral
   - speaker: Tuto
     text: If the rain reaches the lantern the flame will go out for good.
-    expression: 3
-    invalidExpression: None
+    expression: Sad
   - speaker: Rial
     text: Then I suggest we stop talking and start running.
-    expression: 6
-    invalidExpression: None
+    expression: Sassy
   - speaker: Tuto
     text: The tower is just ahead. Stay close to me!
-    expression: 2
-    invalidExpression: None
+    expression: Happy
   - speaker: Rial
     text: Do not worry. I am an excellent runner when I am scared.
-    expression: 7
-    invalidExpression: None
+    expression: Cheeky
   - speaker: Tuto
     text: We made it. Now let us light this lantern once and for all.
-    expression: 1
-    invalidExpression: None
+    expression: Neutral
   characters:
   - {fileID: 11400000, guid: 06fb2c8973ba341e4b499e17c4d3a8b5, type: 2}
   - {fileID: 11400000, guid: 4d302ff06eef4481781d4650b35e5f0d, type: 2}

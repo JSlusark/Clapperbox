@@ -160,21 +160,13 @@ namespace DefaultNamespace
             {
                 SerializedProperty elementProp = dialogueProp.GetArrayElementAtIndex(i);
                 SerializedProperty expressionProp = elementProp.FindPropertyRelative("expression");
-                SerializedProperty unrecognisedProp = elementProp.FindPropertyRelative("invalidExpression");
+                SerializedProperty lineSpeakerProp = elementProp.FindPropertyRelative("speaker");
 
-
-                bool isUnrecognised = false;
-                if (expressionProp != null && expressionProp.enumValueIndex >= 0 &&
-                    expressionProp.enumValueIndex < expressionProp.enumNames.Length)
-                {
-                    if (expressionProp.enumNames[expressionProp.enumValueIndex] == "Unrecognised")
-                    {
-                        isUnrecognised = true;
-                        alert = " ⚠️";
-                    }
-                    else
-                        alert = "";
-                }
+                // Flags a line whose speaker has no sprite with that expression name
+                var character = ((ScreenPlayData)target).GetCharacter(lineSpeakerProp?.stringValue);
+                bool isMissing = character != null && expressionProp != null
+                                 && character.GetExpression(expressionProp.stringValue) == null;
+                alert = isMissing ? " ⚠️" : "";
 
                 // Foldout header
                 EditorGUILayout.PropertyField(elementProp, new GUIContent($"Line {i}{alert}"), false);
@@ -191,19 +183,11 @@ namespace DefaultNamespace
                     if (textProp != null) EditorGUILayout.PropertyField(textProp);
 
                     float originalLabelWidth = EditorGUIUtility.labelWidth;
-                    if (!isUnrecognised)
+                    if (expressionProp != null)
                     {
-                        ChangeUI(textColor: defaultColor, labelWidth: 110f);
-                        EditorGUILayout.PropertyField(expressionProp);
-                    }
-
-                    if (unrecognisedProp != null && unrecognisedProp.stringValue != "None")
-                    {
-                        ChangeUI(textColor: errorColor, labelWidth: 135f);
-
-                        unrecognisedProp.stringValue =
-                            EditorGUILayout.TextField(unrecognisedProp.displayName, unrecognisedProp.stringValue);
-
+                        ChangeUI(textColor: isMissing ? errorColor : defaultColor, labelWidth: 110f);
+                        EditorGUILayout.PropertyField(expressionProp,
+                            new GUIContent(expressionProp.displayName, isMissing ? $"{character.speakerName} has no '{expressionProp.stringValue}' sprite" : null));
                         ChangeUI(labelWidth: originalLabelWidth, textColor: defaultColor, bgColor: defaultColor);
                     }
 

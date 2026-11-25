@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
+  m_Name: test_missing_player_Screenplay
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.ScreenPlayData
+  dialogueList:
+  - speaker: Nugget
+    text: Look! An abandoned farm!
+    expression: Surprised
+  - speaker: Nima
+    text: The gate on my map had a crooked weathervane just like that one. I think
+      we're meant to rest here.
+    expression: Neutral
+  - speaker: Shaz
+    text: '"Or it''s a trap and a cursed beast is up for a feast... Either way, dibs
+      on the hayloft."'
+    expression: Cheeky
+  - speaker: Nugget
+    text: No big bad beast eats Nugget! I'll peck it into straw!
+    expression: Angry
+  - speaker: Lola
+    text: There there... Nobody's eating anyone! As a random passenger i know well!
+    expression: Cheeky
+  - speaker: Nima
+    text: ...Ahhh!
+    expression: Surprised
+  - speaker: Nugget
+    text: '"Unhand her, beast! Feel the wrath of my sharp talons!"'
+    expression: Angry
+  - speaker: Shaz
+    text: "\"Nugget, calm your feathers, Nima is\u2014\""
+    expression: Neutral
+  - speaker: Nima
+    text: '"..Soooo excited for these hidden, uncursed ripe pumpkins and carrots!
+      We could harvest enough for days!"'
+    expression: Happy
+  - speaker: Nima
+    text: '"Shaz, can you help me with them?"'
+    expression: Neutral
+  - speaker: Shaz
+    text: '"Yeah, I can help! Though I should warn you, my harvesting fee is one
+      carrot per basket... triple that if I have to deal with the crows!"'
+    expression: Happy
+  - speaker: Nima
+    text: '"Fair enough, hard work deserves fair pay! I''ll count out your carrots
+      first."'
+    expression: Happy
+  - speaker: Shaz
+    text: Well... don't forget that I also require a break every ten minutes in the
+      shade.
+    expression: Cheeky
+  - speaker: Nima
+    text: '"The townspeople told me there''s a caldera not too far from here. I suppose
+      it can get pretty hot all of a sudden, so proper rest makes sense."'
+    expression: Neutral
+  - speaker: Shaz
+    text: ...And remember to carefully groom my fur against the humidity so I stay
+      handsome!
+    expression: Happy
+  - speaker: Nima
+    text: '"Don''t worry, I have plenty of experience. I used to take care of all
+      the farm animals back home."'
+    expression: Cheeky
+  - speaker: Shaz
+    text: W-Wait... I was clearly joking! Don't lump me in with the livestock!
+    expression: Surprised
+  - speaker: Nima
+    text: '"Hehe, fair point. Sorry, your ears were twitching so much that I really
+      thought you liked the idea."'
+    expression: Cheeky
+  - speaker: Shaz
+    text: '"T-That''s just the caldera breeze! Ready to dig or what, farmgirl?"'
+    expression: Angry
+  - speaker: Nugget
+    text: Wait for Nugget! My beak can dig twice as fast!
+    expression: Happy
+  characters:
+  - {fileID: 11400000, guid: 3151a269e946b412793a2a8c26f7221e, type: 2}
+  - {fileID: 11400000, guid: 02817d7ab478e4636951b2dec4817df2, type: 2}
+  - {fileID: 11400000, guid: 15f2623d473dc472f8ba5528302d282c, type: 2}
+  - {fileID: 11400000, guid: 2af510557737c4822a9667e71967c946, type: 2}
+  csvImport: {fileID: 4900000, guid: b2976b45780934a3993b3ede0c376f3b, type: 3}
+  importState: 2

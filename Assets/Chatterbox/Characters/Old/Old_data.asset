@@ -15,17 +15,17 @@ MonoBehaviour:
   speakerName: Old
   speakerColor: {r: 1, g: 1, b: 1, a: 1}
   expressions:
-  - type: 4
+  - name: Angry
     sprite: {fileID: 21300000, guid: 645cfee702d1248bea6a6c9890cecda8, type: 3}
-  - type: 7
+  - name: Cheeky
     sprite: {fileID: 21300000, guid: 8e35f1d6d61a84516b19ba9a828c7c6e, type: 3}
-  - type: 2
+  - name: Happy
     sprite: {fileID: 21300000, guid: 7685aebbcb81846bbb9e0bbd71f48333, type: 3}
-  - type: 1
+  - name: Neutral
     sprite: {fileID: 21300000, guid: b99caa639489e49bfb90b1eb46f41044, type: 3}
-  - type: 3
+  - name: Sad
     sprite: {fileID: 21300000, guid: ecd61f11cba4f4c129e056fbe8342cee, type: 3}
-  - type: 5
+  - name: Surprised
     sprite: {fileID: 21300000, guid: 192cc9e38eaef4cdebde85086225bcd6, type: 3}
   chatterSound: {fileID: 0}
   chatterType: 0

@@ -4,8 +4,11 @@ using System.Linq;
 namespace Chatterbox.Editor
 {
     using UnityEditor;
+
     using UnityEngine;
+
     using System.IO;
+
     using DefaultNamespace;
 
     [CustomEditor(typeof(CharacterData))]
@@ -106,41 +109,19 @@ namespace Chatterbox.Editor
 
             string[] spriteFiles = Directory.GetFiles(spritesDirectory);
 
-            List<string> unrecognisedFiles = new List<string>();
             foreach (string filePath in spriteFiles)
             {
                 string cleanPath = filePath.Replace('\\', '/');
                 if (cleanPath.EndsWith(".meta")) continue;
 
-
+                // Every sprite is an expression named after its file: "Angry-more.png" -> "Angry-more"
                 Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(cleanPath);
                 if (sprite != null)
-                {
-                    ExpressionSprite newExpression = new()
+                    character.expressions.Add(new ExpressionSprite
                     {
+                        name = Path.GetFileNameWithoutExtension(cleanPath),
                         sprite = sprite
-                    };
-
-                    // Parses file name to assign to enum
-                    string fileName = Path.GetFileNameWithoutExtension(cleanPath);
-                    if (System.Enum.TryParse(fileName, true, out Expression matchedType))
-                        newExpression.type = matchedType;
-                    else
-                    {
-                        newExpression.type = default;
-                        unrecognisedFiles.Add(fileName);
-                    }
-
-                    character.expressions.Add(newExpression);
-                }
-            }
-
-            if (unrecognisedFiles.Count > 0)
-            {
-                string enumFilePath = "Assets/Chatterbox/Scripts/Enums/Expression.cs";
-
-                Debug.LogWarning($"[Expressions] Added expressions as unrecognised: {string.Join(", ", unrecognisedFiles)}");
-                Debug.Log($"Add the new expression <a href=\"{enumFilePath}\" line=\"1\">[here]</a> or check for correct file name and import again");
+                    });
             }
 
             if (character.expressions.Count == 0)

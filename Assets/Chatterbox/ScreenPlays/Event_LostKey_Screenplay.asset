@@ -15,32 +15,25 @@ MonoBehaviour:
   dialogueList:
   - speaker: Tuto
     text: Oh no! The key to the lantern tower is gone!
-    expression: 5
-    invalidExpression: None
+    expression: Surprised
   - speaker: Rial
     text: Have you checked your pockets? All twelve of them?
-    expression: 7
-    invalidExpression: None
+    expression: Cheeky
   - speaker: Tuto
     text: Of course I checked my pockets!
-    expression: 4
-    invalidExpression: None
+    expression: Angry
   - speaker: Rial
     text: Then I guess it grew legs and walked off. Happens to the best of us.
-    expression: 6
-    invalidExpression: None
+    expression: Sassy
   - speaker: Tuto
     text: Without that key we cannot reach the top of the hill.
-    expression: 3
-    invalidExpression: None
+    expression: Sad
   - speaker: Rial
     text: Fine. I saw a crow carrying something shiny toward the old well.
-    expression: 1
-    invalidExpression: None
+    expression: Neutral
   - speaker: Tuto
     text: Rial! Why did you not say so sooner?
-    expression: 2
-    invalidExpression: None
+    expression: Happy
   characters:
   - {fileID: 11400000, guid: 06fb2c8973ba341e4b499e17c4d3a8b5, type: 2}
   - {fileID: 11400000, guid: 4d302ff06eef4481781d4650b35e5f0d, type: 2}

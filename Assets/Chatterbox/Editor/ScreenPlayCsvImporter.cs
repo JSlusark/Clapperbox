@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using UnityEditor;
@@ -25,6 +27,36 @@ namespace DefaultNamespace
                 if (fields.Length == 3) rows.Add((fields[0].Trim(' '), fields[1].Trim(' ')));
             }
             return rows;
+        }
+
+        // Rewrites the csv at path, replacing a NAME (column 0) or EXPRESSION (column 1) value that equals `from`
+        // with `to`. speaker: when set, only rows of that speaker change. Everything else in the file is kept as it is
+        // (quotes, spaces, line endings, encoding). Returns how many rows changed.
+        public static int ReplaceField(string path, int column, string from, string to, string speaker = null)
+        {
+            byte[] bytes = File.ReadAllBytes(path);
+            bool hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+            string text = new UTF8Encoding(false).GetString(bytes, hasBom ? 3 : 0, bytes.Length - (hasBom ? 3 : 0));
+
+            string[] lines = text.Split('\n'); // keeps any '\r' at the end of each line
+            int changed = 0;
+            for (int i = 1; i < lines.Length; i++) // row 0 is the header
+            {
+                string line = lines[i].TrimEnd('\r');
+                string ending = lines[i].Substring(line.Length);
+                string[] fields = Regex.Split(line, CsvSplitRegex);
+                if (fields.Length != 3) continue;
+                if (speaker != null && fields[0].Trim(' ') != speaker) continue;
+                if (fields[column].Trim(' ') != from) continue;
+
+                fields[column] = fields[column].Replace(from, to); // keeps the spaces around the value
+                lines[i] = string.Join(",", fields) + ending;
+                changed++;
+            }
+
+            if (changed > 0)
+                File.WriteAllText(path, string.Join("\n", lines), new UTF8Encoding(hasBom));
+            return changed;
         }
 
         public static bool IsCsvFile(TextAsset csvAsset)
@@ -100,17 +132,7 @@ namespace DefaultNamespace
                     Line listEntry = new Line();
                     listEntry.speaker = nameField;
                     listEntry.text = dialogueField;
-                    if (Enum.TryParse(expressionField, true, out Expression type))
-                    {
-                        listEntry.expression = type;
-                        listEntry.invalidExpression = "None";
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Expression type invalidExpression: '{expressionField}' on line {i + 1} could not convert to enum. Defaulting to Neutral.");
-                        listEntry.expression = Expression.Unrecognised;
-                        listEntry.invalidExpression = expressionField;
-                    }
+                    listEntry.expression = expressionField; // the sprite name; Create ChatterBox checks it exists
 
                     Debug.Log($"{i + 1}.IMPORTED: \n Name: {nameField} \n Line: {dialogueField} \n  Expression: {expressionField}");
                     targetData.dialogueList.Add(listEntry);

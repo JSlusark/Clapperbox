@@ -19,18 +19,20 @@ namespace Chatterbox.Editor
      *  3. Custom CSV: add one or more csv files; each one creates its own ChatterBox named after it:
      *  - Chatterbox/BoxPrefabs/<CsvName>.prefab              variant of the chosen style with the screenplay assigned
      *  - Chatterbox/ScreenPlays/<CsvName>_Screenplay.asset   already imported from the csv
-     *  - Chatterbox/ScreenPlays/raw_csv/<CsvName>.csv        only for csv files picked from outside the project;
+     *  - Chatterbox/ScreenPlays/csv/<CsvName>.csv            only for csv files picked from outside the project;
      *                                                        csv files already in the project are used where they are
      *  4. Before creating, every csv is checked for speakers and expressions the project has no data for
      *     (MissingCharacterData). They are listed under the csv and Create stays disabled until the user
-     *     either creates them from Characters/0_template (Yes) or drops the csvs that need them (No).
+     *     either creates them (Yes) or drops the csvs that need them (No).
+     *     Names close to existing ones are listed as possible typos with a suggestion; they are not created
+     *     until fixed in the csv or marked "Not a typo".
      */
     public class CreateChatterBoxWindow : EditorWindow
     {
         private const string BasePrefabPath = "Assets/Chatterbox/BoxPrefabs/ChatterBox_Prefab.prefab";
         private const string ChatterBoxesFolder = "Assets/Chatterbox/BoxPrefabs";
         private const string ScreenplaysFolder = "Assets/Chatterbox/ScreenPlays";
-        private const string PlaywrightFolder = "Assets/Chatterbox/ScreenPlays/raw_csv";
+        private const string PlaywrightFolder = "Assets/Chatterbox/ScreenPlays/csv";
         private const string StylesFolder = "Assets/Chatterbox/BoxStyles";
         private const string SamplePrefix = "Sample_";
         private const string StylePrefKey = "Chatterbox.CreateChatterBox.Style"; // remembers the last style picked
@@ -51,8 +53,11 @@ namespace Chatterbox.Editor
         private readonly List<string> _csvPaths = new List<string>(); // full paths, one ChatterBox each
         private readonly List<string> _failures = new List<string>(); // "file: reason" from the last run
         private readonly Dictionary<string, MissingCharacterData.Report> _reports = new Dictionary<string, MissingCharacterData.Report>(); // by csv path
-        private readonly List<string> _createdPaths = new List<string>(); // character data made from the template
+        private readonly MissingCharacterData.Created _created = new MissingCharacterData.Created(); // made by Yes
+        private Vector2 _createdScroll;
+        private const float CreatedMaxHeight = 220; // the created list scrolls past this
         private bool _checkDirty = true; // csv list, source or project changed: check the csvs again
+        private readonly HashSet<string> _notTypos = new HashSet<string>(); // typos the user marked as intended
         private Vector2 _scroll;
 
         private readonly List<BoxStyle> _styles = new List<BoxStyle>();
@@ -68,6 +73,9 @@ namespace Chatterbox.Editor
         }
 
         private void OnEnable() => LoadStyles();
+
+        // A csv may have been fixed in a text editor while the window was in the background
+        private void OnFocus() => _checkDirty = true;
 
         private void OnDisable()
         {
@@ -153,7 +161,8 @@ namespace Chatterbox.Editor
                 if (GUILayout.Button("Clear", GUILayout.Width(60)))
                 {
                     _csvPaths.Clear();
-                    _createdPaths.Clear();
+                    _created.Characters.Clear();
+                    _created.Expressions.Clear();
                     _checkDirty = true;
                 }
             EditorGUILayout.EndHorizontal();
@@ -212,7 +221,7 @@ namespace Chatterbox.Editor
             return slash > 0 ? relative.Substring(0, slash) : null;
         }
 
-        // Sample_CozyLand -> the project's CozyLand_sample.csv (preferring the style folder, then ScreenPlays/raw_csv)
+        // Sample_CozyLand -> the project's CozyLand_sample.csv (preferring the style folder, then ScreenPlays/csv)
         private static TextAsset FindExampleCsv(string folder)
         {
             if (!folder.StartsWith(SamplePrefix, StringComparison.OrdinalIgnoreCase)) return null;
@@ -487,6 +496,8 @@ namespace Chatterbox.Editor
         private IEnumerable<string> CurrentCsvPaths => UsingExample ? new[] { ExamplePath } : _csvPaths;
 
         private bool HasWarnings => CurrentCsvPaths.Any(p => _reports.TryGetValue(p, out var r) && !r.IsEmpty);
+        private bool HasMissing => CurrentCsvPaths.Any(p => _reports.TryGetValue(p, out var r) && r.HasMissing);
+        private bool HasTypos => CurrentCsvPaths.Any(p => _reports.TryGetValue(p, out var r) && r.Typos.Count > 0);
 
         // Checks every listed csv against the characters in the project (one lookup shared by all csvs)
         private void RunChecks()
@@ -496,7 +507,7 @@ namespace Chatterbox.Editor
             var characters = CharacterObjectsImport.FindAllCharacters();
             foreach (string path in CurrentCsvPaths)
                 if (File.Exists(path))
-                    _reports[path] = MissingCharacterData.Check(File.ReadAllText(path), characters);
+                    _reports[path] = MissingCharacterData.Check(File.ReadAllText(path), characters, _notTypos);
         }
 
         // Indented lines under a csv: each missing character once, each missing expression once per character
@@ -505,18 +516,67 @@ namespace Chatterbox.Editor
             if (csvPath == null || !_reports.TryGetValue(csvPath, out var report) || report.IsEmpty) return;
 
             foreach (string name in report.MissingCharacters)
-                DrawIssueLine($"{name}: found missing character folder from script");
+                DrawIssueLine("console.erroricon.sml", $"{Bold(name)}: found missing character folder from script");
             foreach (var (name, expression) in report.MissingExpressions)
-                DrawIssueLine($"{expression}: missing expression sprite found for {name}");
+                DrawIssueLine("console.erroricon.sml", $"{Bold(expression)}: missing expression sprite found for {Bold(name)}");
+
+            foreach (var typo in report.Typos)
+            {
+                string text = typo.Expression == null
+                    ? $"{Bold(typo.Character)}: character not found, did you mean {Bold(typo.Suggestion)}?"
+                    : $"{Bold(typo.Expression)}: expression not found for {Bold(typo.Character)}, did you mean {Bold(typo.Suggestion)}?";
+                int clicked = DrawIssueLine("console.warnicon.sml", text, "Yes", "Not a typo");
+                if (clicked == 1) FixTypo(csvPath, typo);
+                if (clicked == 2)
+                {
+                    _notTypos.Add(typo.Key); // from now on it is treated as missing data to create
+                    _checkDirty = true;
+                    GUIUtility.ExitGUI();
+                }
+            }
         }
 
-        private static void DrawIssueLine(string text)
+        private static GUIStyle _issueStyle;
+        private static GUIStyle IssueStyle => _issueStyle ??= new GUIStyle(EditorStyles.wordWrappedLabel) { richText = true };
+
+        // Character and expression names in bold; "<" would start a rich-text tag, so it is swapped for a look-alike
+        private static string Bold(string name) => $"<b>{name.Replace("<", "‹")}</b>";
+
+        // Returns which of the optional buttons was clicked (1, 2, ...), or 0
+        private static int DrawIssueLine(string icon, string text, params string[] buttons)
         {
             EditorGUILayout.BeginHorizontal();
             GUILayout.Space(20);
-            GUILayout.Label(EditorGUIUtility.IconContent("console.erroricon.sml"), GUILayout.Width(18), GUILayout.Height(18));
-            EditorGUILayout.LabelField(text, EditorStyles.wordWrappedLabel);
+            GUILayout.Label(EditorGUIUtility.IconContent(icon), GUILayout.Width(18), GUILayout.Height(18));
+            EditorGUILayout.LabelField(text, IssueStyle);
+            int clicked = 0;
+            for (int i = 0; i < buttons.Length; i++)
+                if (GUILayout.Button(buttons[i], GUILayout.ExpandWidth(false))) clicked = i + 1;
             EditorGUILayout.EndHorizontal();
+            return clicked;
+        }
+
+        // "Yes" on a typo: writes the suggested name into the csv, so the line is fixed at its source
+        private void FixTypo(string csvPath, MissingCharacterData.Typo typo)
+        {
+            int changed = typo.Expression == null
+                ? ScreenPlayCsvImporter.ReplaceField(csvPath, 0, typo.Character, typo.Suggestion)
+                : ScreenPlayCsvImporter.ReplaceField(csvPath, 1, typo.Expression, typo.Suggestion, typo.Character);
+            Debug.Log($"[Chatterbox] {Path.GetFileName(csvPath)}: replaced '{typo.Expression ?? typo.Character}' " +
+                      $"with '{typo.Suggestion}' on {changed} row(s).");
+
+            string assetPath = ToAssetPath(csvPath);
+            if (assetPath != null) AssetDatabase.ImportAsset(assetPath); // keeps the project's copy in sync
+            _checkDirty = true;
+            GUIUtility.ExitGUI();
+        }
+
+        // Full path -> "Assets/..." path, or null when the file is outside the project
+        private static string ToAssetPath(string fullPath)
+        {
+            string path = Path.GetFullPath(fullPath).Replace('\\', '/');
+            string dataPath = Application.dataPath.Replace('\\', '/') + "/";
+            return path.StartsWith(dataPath) ? "Assets/" + path.Substring(dataPath.Length) : null;
         }
 
         private void DrawMissingWarning()
@@ -524,31 +584,39 @@ namespace Chatterbox.Editor
             if (!HasWarnings) return;
 
             EditorGUILayout.Space(6);
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon.sml"), GUILayout.Width(18), GUILayout.Height(18));
-            EditorGUILayout.LabelField(
-                "The csv refers to data that is missing in the character folder, this data will be created automatically " +
-                "from a template character folder which can be edited later.",
-                EditorStyles.wordWrappedLabel);
-            EditorGUILayout.EndHorizontal();
+            if (HasMissing)
+                DrawWarningText(
+                    "The csv refers to data that is missing in the character folder, this data will be created automatically " +
+                    "from a template character folder which can be edited later. " +
+                    "Missing expressions of existing characters are created as white images, to be replaced with the real sprite.");
+            if (HasTypos)
+                DrawWarningText(
+                    "Some names look like typos of existing ones. Fix them in the csv (the list updates when you come back " +
+                    "to this window), or press Not a typo to create them as new.");
 
             EditorGUILayout.LabelField("Continue?", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Yes")) CreateMissingData();
+            using (new EditorGUI.DisabledScope(!HasMissing)) // typos are never created by Yes
+                if (GUILayout.Button("Yes")) CreateMissingData();
             if (GUILayout.Button("No")) DropCsvsWithWarnings();
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space(6);
         }
 
+        private static void DrawWarningText(string text)
+        {
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon.sml"), GUILayout.Width(18), GUILayout.Height(18));
+            EditorGUILayout.LabelField(text, EditorStyles.wordWrappedLabel);
+            EditorGUILayout.EndHorizontal();
+        }
+
         private void CreateMissingData()
         {
             var reports = CurrentCsvPaths
-                .Where(p => _reports.TryGetValue(p, out var r) && !r.IsEmpty)
+                .Where(p => _reports.TryGetValue(p, out var r) && r.HasMissing)
                 .Select(p => _reports[p]);
-            var created = MissingCharacterData.CreateMissing(reports, out var errors);
-
-            foreach (string path in created)
-                if (!_createdPaths.Contains(path)) _createdPaths.Add(path);
+            _created.Add(MissingCharacterData.CreateMissing(reports, out var errors));
             _failures.Clear();
             _failures.AddRange(errors);
             _checkDirty = true;
@@ -564,23 +632,70 @@ namespace Chatterbox.Editor
             GUIUtility.ExitGUI();
         }
 
+        // Compact, scrollable summary of what Yes created:
+        //   New character added           -> each new character with Locate
+        //   New expressions added for ... -> each existing character with Locate, then its new sprite files
         private void DrawCreated()
         {
-            if (_createdPaths.Count == 0) return;
+            if (_created.IsEmpty) return;
+
+            var newNames = _created.Characters.Select(c => c.character).ToList();
+            var forExisting = _created.Expressions
+                .Where(e => !newNames.Contains(e.character))
+                .GroupBy(e => e.character)
+                .ToList();
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField(
-                "Created from the template character. Check each folder and replace the template sprites and voice:",
-                EditorStyles.wordWrappedMiniLabel);
-            foreach (string path in _createdPaths)
+            _createdScroll = EditorGUILayout.BeginScrollView(_createdScroll,
+                GUILayout.MaxHeight(CreatedMaxHeight), GUILayout.ExpandHeight(false));
+
+            if (_created.Characters.Count > 0)
             {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(new GUIContent(path.Substring("Assets/Chatterbox/".Length), path));
-                if (GUILayout.Button("Locate", GUILayout.Width(60)))
-                    EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(path));
-                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.LabelField(_created.Characters.Count == 1 ? "New character added" : "New characters added",
+                    EditorStyles.boldLabel);
+                GUILayout.Space(2);
+                foreach (var (name, folder) in _created.Characters)
+                {
+                    DrawCreatedName(name, folder);
+                    // Sprites the template lacked, made white for the new character
+                    var extra = _created.Expressions.Where(e => e.character == name).Select(e => Path.GetFileName(e.path)).ToList();
+                    if (extra.Count > 0) EditorGUILayout.LabelField(string.Join(", ", extra), EditorStyles.wordWrappedMiniLabel);
+                }
             }
+
+            if (forExisting.Count > 0)
+            {
+                if (_created.Characters.Count > 0) GUILayout.Space(12);
+                EditorGUILayout.LabelField("New expressions added for existing characters", EditorStyles.boldLabel);
+                for (int i = 0; i < forExisting.Count; i++)
+                {
+                    GUILayout.Space(2);
+                    if (i > 0)
+                    {
+                        Rect line = GUILayoutUtility.GetRect(1, 1, GUILayout.ExpandWidth(true));
+                        EditorGUI.DrawRect(line, new Color(0.5f, 0.5f, 0.5f, 0.4f));
+                        GUILayout.Space(2);
+                    }
+                    var group = forExisting[i];
+                    DrawCreatedName(group.Key, Path.GetDirectoryName(group.First().path).Replace('\\', '/'));
+                    EditorGUILayout.LabelField(string.Join(", ", group.Select(e => Path.GetFileName(e.path))),
+                        EditorStyles.wordWrappedMiniLabel);
+                }
+                GUILayout.Space(2);
+            }
+
+            EditorGUILayout.EndScrollView();
             EditorGUILayout.EndVertical();
+        }
+
+        // Bold name with a Locate button that highlights the folder in the Project window
+        private static void DrawCreatedName(string name, string folder)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(new GUIContent(name, folder), EditorStyles.boldLabel);
+            if (GUILayout.Button("Locate", GUILayout.Width(60)))
+                EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath(folder));
+            EditorGUILayout.EndHorizontal();
         }
 
         private void CreateAll()

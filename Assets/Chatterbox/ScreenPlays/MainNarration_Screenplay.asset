@@ -15,44 +15,34 @@ MonoBehaviour:
   dialogueList:
   - speaker: Tuto
     text: Welcome to the village of Lumen! It is so good to finally meet you.
-    expression: 2
-    invalidExpression: None
+    expression: Happy
   - speaker: Tuto
     text: Long ago the great lantern on the hill kept every night bright and warm.
-    expression: 1
-    invalidExpression: None
+    expression: Neutral
   - speaker: Tuto
     text: But one winter the lantern went dark and nobody knows why.
-    expression: 3
-    invalidExpression: None
+    expression: Sad
   - speaker: Rial
     text: Some say it ran out of oil. I say someone forgot to pay the bill.
-    expression: 6
-    invalidExpression: None
+    expression: Sassy
   - speaker: Tuto
     text: Rial! This is a serious story!
-    expression: 4
-    invalidExpression: None
+    expression: Angry
   - speaker: Rial
     text: I am being very serious. Bills are serious business.
-    expression: 7
-    invalidExpression: None
+    expression: Cheeky
   - speaker: Tuto
     text: Since that night the forest has grown darker and the paths keep changing.
-    expression: 1
-    invalidExpression: None
+    expression: Neutral
   - speaker: Tuto
     text: And now the lantern has started flickering again all on its own!
-    expression: 5
-    invalidExpression: None
+    expression: Surprised
   - speaker: Rial
     text: Which means someone has to climb up there and take a look.
-    expression: 1
-    invalidExpression: None
+    expression: Neutral
   - speaker: Tuto
     text: That someone is you! Let us get going before the sun sets.
-    expression: 2
-    invalidExpression: None
+    expression: Happy
   characters:
   - {fileID: 11400000, guid: 06fb2c8973ba341e4b499e17c4d3a8b5, type: 2}
   - {fileID: 11400000, guid: 4d302ff06eef4481781d4650b35e5f0d, type: 2}

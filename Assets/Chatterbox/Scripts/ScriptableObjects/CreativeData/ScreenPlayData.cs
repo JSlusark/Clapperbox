@@ -15,8 +15,7 @@ namespace DefaultNamespace
     {
         [TextArea(1, 1)] public string speaker;
         [TextArea(1, 6)] public string text;
-        public Expression expression = Expression.Neutral;
-        [TextArea(1, 1)] public string invalidExpression;
+        [TextArea(1, 1)] public string expression = "Neutral"; // name of the speaker's expression sprite
     }
 
     public enum ImportState

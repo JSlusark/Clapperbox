@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f184b252e1b54560a20c7608492a0f79, type: 3}
+  m_Name: PopComic_sample_Screenplay
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultNamespace.ScreenPlayData
+  dialogueList:
+  - speaker: Jay
+    text: '"Forget the rulebook for five minutes, okay? We take the shortcut through
+      the rooftops, beat them to the finish line and then grab tacos after... Deal?"""'
+    expression: Cheeky
+  - speaker: Andy
+    text: '"The rooftops? Jay, I''m wearing flip-flops. That''s cat territory!"'
+    expression: Surprised
+  - speaker: Jay
+    text: '"Then you''ll be the fastest guy in flip-flops to ever conquer cat territory!"'
+    expression: Happy
+  - speaker: Florence
+    text: '"Ahem. Rule fourteen of the Humans-versus-Cats Turf Derby: humans stick
+      to the streets, cats get the alleys, and nobody touches the rooftops!"'
+    expression: Angry
+  - speaker: Andy
+    text: '"...Why is a cat the referee for a human-versus-cat race?"'
+    expression: Neutral
+  - speaker: Florence
+    text: '"Because I am the only citizen in this city who actually reads the rulebook."'
+    expression: Neutral
+  - speaker: Marcy
+    text: '"And I''m the only cat who shreds it! Mrrrow~ The rooftops belong to us,
+      two-legs! Catch you at the finish!"'
+    expression: Cheeky
+  - speaker: Jay
+    text: "\"Hey! Those roofs are neutral territory, Marcy\u2014you're cheating too!\""
+    expression: Surprised
+  - speaker: Marcy
+    text: '"All''s fair in a turf war! Whoever wins gets the shortcuts AND the free
+      tacos. Bye-bye!"'
+    expression: Happy
+  - speaker: Andy
+    text: "\"Oh, it is ON. Flip-flops or not, nobody takes our shortcuts\u2014or
+      my tacos.\""
+    expression: Angry
+  - speaker: Jay
+    text: "\"That's the spirit! To the rooftops\u2014go, go, go!\""
+    expression: Happy
+  - speaker: Florence
+    text: '"Wait! Rule fifteen! Rule sixteen! ...Nobody ever listens to rule sixteen."'
+    expression: Surprised
+  - speaker: Andy
+    text: '"I lost a flip-flop. I literally lost a flip-flop on the third roof, Jay."'
+    expression: Sad
+  - speaker: Jay
+    text: "\"Mourn it later\u2014the finish banner is right below us. Jump!\""
+    expression: Neutral
+  - speaker: Marcy
+    text: '"What?! How did two clumsy humans land here ahead of me?!"'
+    expression: Surprised
+  - speaker: Jay
+    text: '"Our rooftops now, furball. Never underestimate a guy running on pure
+      taco motivation."'
+    expression: Cheeky
+  - speaker: Florence
+    text: '"I declare a tie. Also, both species are disqualified for violating rooftop
+      neutrality."'
+    expression: Angry
+  - speaker: Andy
+    text: '"Disqualified... AND the taco truck just rolled up its window."'
+    expression: Sad
+  - speaker: Marcy
+    text: '"Don''t cry, beach boy. I swiped a taco before they closed. Well... mostly
+      just the cheese."'
+    expression: Cheeky
+  - speaker: Florence
+    text: '"Hmph. Rule seventeen: turf war or not, disqualified racers still share.
+      ...Pass the cheese."'
+    expression: Happy
+  characters:
+  - {fileID: 11400000, guid: d69a4158a690f49e0811ec3a8decd6b8, type: 2}
+  - {fileID: 11400000, guid: 18342f6332de549da89f8571c683c742, type: 2}
+  - {fileID: 11400000, guid: 1b3bd155717c24e16bb74cdc05b1fb77, type: 2}
+  - {fileID: 11400000, guid: 01e80240bc1594e6ba9169c1b2dbc84a, type: 2}
+  csvImport: {fileID: 4900000, guid: 987ccb6e0fa5b4439bd1d25983c87db5, type: 3}
+  importState: 2

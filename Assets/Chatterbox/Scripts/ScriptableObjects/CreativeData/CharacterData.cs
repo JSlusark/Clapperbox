@@ -1,14 +1,16 @@
 using System.Collections.Generic;
 using Chatterbox.Runtime.Scripts.Chatter;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 
 namespace DefaultNamespace
 {
+    // An expression is the name of its sprite file: "Angry-more.png" is the expression "Angry-more"
     [System.Serializable]
     public struct ExpressionSprite
     {
-        public Expression type;
+        [FormerlySerializedAs("type")] public string name;
         public Sprite sprite;
     }
 
@@ -28,10 +30,14 @@ namespace DefaultNamespace
         [Header("Expressions")] // would be cool to add chatterSound types by expressions
         public List<ExpressionSprite> expressions;
 
-        public Sprite GetExpression(Expression type)
+        // Case doesn't matter: "happy" in a csv finds the "Happy" sprite. Null when the character has no such expression
+        public Sprite GetExpression(string expressionName)
         {
-            var entry = expressions.Find(e => e.type == type);
-            return entry.sprite;
+            if (expressions == null || string.IsNullOrEmpty(expressionName)) return null;
+            foreach (var entry in expressions)
+                if (string.Equals(entry.name, expressionName, System.StringComparison.OrdinalIgnoreCase))
+                    return entry.sprite;
+            return null;
         }
 
         [Header("Voice")] // would be cool to add chatterSound types by expressions

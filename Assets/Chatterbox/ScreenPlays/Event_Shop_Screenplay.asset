@@ -15,28 +15,22 @@ MonoBehaviour:
   dialogueList:
   - speaker: Rial
     text: Welcome to Rial's Remarkable Goods! Everything is on sale.
-    expression: 2
-    invalidExpression: None
+    expression: Happy
   - speaker: Tuto
     text: Since when do you own a shop?
-    expression: 5
-    invalidExpression: None
+    expression: Surprised
   - speaker: Rial
     text: Since about five minutes ago. Business is booming.
-    expression: 7
-    invalidExpression: None
+    expression: Cheeky
   - speaker: Rial
     text: Lantern oil is ten coins. Lantern oil with a smile is twenty.
-    expression: 6
-    invalidExpression: None
+    expression: Sassy
   - speaker: Tuto
     text: That is the same oil!
-    expression: 4
-    invalidExpression: None
+    expression: Angry
   - speaker: Rial
     text: The smile is handmade. Take it or leave it.
-    expression: 1
-    invalidExpression: None
+    expression: Neutral
   characters:
   - {fileID: 11400000, guid: 4d302ff06eef4481781d4650b35e5f0d, type: 2}
   - {fileID: 11400000, guid: 06fb2c8973ba341e4b499e17c4d3a8b5, type: 2}
