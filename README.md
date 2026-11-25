@@ -17,6 +17,7 @@ A dialogue system toolkit for Unity, designed to automatically set up in-game di
 - [Development](#development)
 - [Known issues](#known-issues)
 - [Contributing](#contributing)
+- [Asset notice](#asset-notice)
 - [License](#license)
 
 ## About
@@ -255,3 +256,7 @@ Edit-mode tests live in `Assets/Clapperbox/Editor/Tests/`. Run them from **Windo
 ## Contributing
 
 Bug reports and questions are welcome in [GitHub Issues](../../issues).
+
+## Asset notice
+
+The graphics in the sample box styles and sample characters were made with generative AI and quickly edited by hand, so the samples clearly show how the tool works. They are placeholders for demonstration, not finished official art..
